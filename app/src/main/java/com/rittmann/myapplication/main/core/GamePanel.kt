@@ -8,10 +8,13 @@ import android.view.SurfaceHolder
 import android.view.SurfaceView
 import com.rittmann.myapplication.main.draw.DrawObject
 import com.rittmann.myapplication.main.entity.Player
+import com.rittmann.myapplication.main.entity.Position
+import com.rittmann.myapplication.main.entity.server.PlayerMovementResult
 import com.rittmann.myapplication.main.scene.SceneManager
 
 class GamePanel(context: Context?) : SurfaceView(context),
     DrawObject, SurfaceHolder.Callback {
+
     private var gameMainThread: GameMainThread? = null
     private val sceneManager: SceneManager
 
@@ -56,6 +59,14 @@ class GamePanel(context: Context?) : SurfaceView(context),
 
     fun setJoystickLeftValues(angle: Double, strength: Double) {
         sceneManager.setJoystickLeftValues(angle, strength)
+    }
+
+    fun getPlayerPosition(): Position {
+        return sceneManager.getPlayerPosition()
+    }
+
+    fun playerMovement(playerMovementResult: PlayerMovementResult) {
+        sceneManager.playerMovement(playerMovementResult)
     }
 
     init {

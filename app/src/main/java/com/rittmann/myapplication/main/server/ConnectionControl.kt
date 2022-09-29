@@ -1,8 +1,11 @@
 package com.rittmann.myapplication.main.server
 
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.Position
+import com.rittmann.myapplication.main.entity.server.PlayerMovementResult
+import com.rittmann.myapplication.main.match.screen.GLOBAL_TAG
 import io.socket.client.IO
 import io.socket.client.Socket
 import java.net.URISyntaxException
@@ -15,9 +18,12 @@ class ConnectionControl(
 ) {
 
     companion object {
-        const val NEW_PLAYER_CONNECTED = "new player connected"
-        const val PLAYER_CREATED = "player created"
-        const val PLAYER_DISCONNECTED = "player disconnected"
+        const val ON_NEW_PLAYER_CONNECTED = "new player connected"
+        const val ON_PLAYER_CREATED = "player created"
+        const val ON_PLAYER_DISCONNECTED = "player disconnected"
+        const val ON_PLAYER_MOVED = "players moved"
+
+        const val EMIT_PLAYER_MOVED = "player moved"
 
         const val DATA_PLAYER_ID = "id"
         const val DATA_PLAYER_POSITION = "position"
@@ -26,6 +32,10 @@ class ConnectionControl(
         const val DATA_PLAYER_COLOR = "color"
         const val DATA_PLAYERS = "players"
         const val DATA_NEW_PLAYER = "newPlayer"
+        const val DATA_PLAYER_MOVEMENT = "playerMovement"
+        const val DATA_PLAYER_MOVEMENT_ANGLE = "angle"
+        const val DATA_PLAYER_MOVEMENT_STRENGTH = "strength"
+        const val DATA_PLAYER_MOVEMENT_NEW_POSITION = "newPosition"
     }
 
     private var socket: Socket? = null
@@ -39,9 +49,11 @@ class ConnectionControl(
         }
     }
 
-    fun connect() {
+    fun connect(): ConnectionControl {
         socket?.connect()
         configSocketEvents()
+
+        return this
     }
 
     private fun configSocketEvents() {
@@ -51,7 +63,7 @@ class ConnectionControl(
 
     private fun setupPlayerEvents() {
         socket?.apply {
-            on(PLAYER_CREATED) { args ->
+            on(ON_PLAYER_CREATED) { args ->
                 val data = args[0] as JSONObject
                 try {
                     val newPlayerJson = data.getJSONObject(DATA_NEW_PLAYER)
@@ -78,7 +90,24 @@ class ConnectionControl(
                 }
             }
 
-            on(NEW_PLAYER_CONNECTED) { args ->
+            on(ON_PLAYER_MOVED) { args ->
+                val data = args[0] as JSONObject
+                try {
+                    val playerMovement = data.getJSONObject(DATA_PLAYER_MOVEMENT)
+
+                    connectionControlEvents.logCallback("ON_PLAYER_MOVED Player Movement: $playerMovement")
+                    connectionControlEvents.playerMovement(
+                        extractPlayerMovement(
+                            playerMovement
+                        )
+                    )
+                } catch (e: JSONException) {
+                    e.printStackTrace()
+                    connectionControlEvents.logCallback("ON_PLAYER_MOVED Error")
+                }
+            }
+
+            on(ON_NEW_PLAYER_CONNECTED) { args ->
                 val data = args[0] as JSONObject
                 try {
                     val players = data.getString(DATA_PLAYERS)
@@ -96,7 +125,7 @@ class ConnectionControl(
                 }
             }
 
-            on(PLAYER_DISCONNECTED) { args ->
+            on(ON_PLAYER_DISCONNECTED) { args ->
                 val data = args[0] as JSONObject
                 try {
                     val id = data.getString(DATA_PLAYER_ID)
@@ -136,10 +165,33 @@ class ConnectionControl(
 
         return player
     }
+
+    private fun extractPlayerMovement(playerMovementJson: JSONObject): PlayerMovementResult {
+        Log.i(GLOBAL_TAG, playerMovementJson.toString())
+
+        val newPosition = playerMovementJson.getJSONObject(DATA_PLAYER_MOVEMENT_NEW_POSITION)
+
+        return PlayerMovementResult(
+            id = playerMovementJson.getString(DATA_PLAYER_ID),
+            x = playerMovementJson.getDouble(DATA_PLAYER_POSITION_X),
+            y = playerMovementJson.getDouble(DATA_PLAYER_POSITION_Y),
+            angle = playerMovementJson.getDouble(DATA_PLAYER_MOVEMENT_ANGLE),
+            strength = playerMovementJson.getDouble(DATA_PLAYER_MOVEMENT_STRENGTH),
+            newPosition = Position(
+                x = newPosition.getDouble(DATA_PLAYER_POSITION_X),
+                y = newPosition.getDouble(DATA_PLAYER_POSITION_Y),
+            ),
+        )
+    }
+
+    fun emit(tag: String, payload: String) {
+        socket?.emit(tag, payload)
+    }
 }
 
 interface ConnectionControlEvents {
     fun logCallback(log: String)
     fun connectionCreated(player: Player)
     fun newPlayerConnected(player: Player)
+    fun playerMovement(playerMovementResult: PlayerMovementResult)
 }

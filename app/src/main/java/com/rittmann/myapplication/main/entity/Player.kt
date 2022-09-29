@@ -7,6 +7,8 @@ import android.util.Log
 import com.rittmann.myapplication.main.entity.body.Collider
 import com.rittmann.myapplication.main.entity.body.Body
 import com.rittmann.myapplication.main.draw.DrawObject
+import com.rittmann.myapplication.main.entity.server.PlayerMovementResult
+import com.rittmann.myapplication.main.extensions.orZero
 import com.rittmann.myapplication.main.match.screen.GLOBAL_TAG
 
 const val BODY_WIDTH = 40
@@ -19,7 +21,9 @@ data class Player(
 ) : DrawObject {
 
     private val body: Body = Body(BODY_WIDTH, BODY_HEIGTH)
-    val collider: Collider = Collider(body)
+    private val collider: Collider = Collider(body)
+    var isMoving: Boolean = false
+    var playerMovementResult: PlayerMovementResult? = null
 
     private val paint = Paint()
 
@@ -32,26 +36,30 @@ data class Player(
     }
 
     override fun draw(canvas: Canvas) {
-        //Log.i(GLOBAL_TAG, "set - position=${position}, body.rect=${body.rect.toShortString()} color=${paint.color}")
-
         canvas.drawRect(body.rect, paint)
-//        canvas.drawRect(100f, 100f, 200f, 200f, paint)
+    }
+
+    fun setIsMoving(playerMovementResult: PlayerMovementResult?) {
+        this.isMoving = playerMovementResult?.angle.orZero() > 0.0
+        this.playerMovementResult = playerMovementResult
+        this.playerMovementResult?.newPositionApplied?.set(false)
     }
 
     fun move(position: Position) {
         val x = position.x * VELOCITY
         val y = position.y * VELOCITY
 
-        //Log.i(GLOBAL_TAG, "set - PRE position=${this.position}, body.rect=${body.rect.flattenToString()} color=${paint.color}")
-
         this.position.sum(x, y)
+    }
 
-//        Log.i(GLOBAL_TAG, "set - position=${position}, x=$x, y=$y, this.position=${this.position}")
-        Log.i(GLOBAL_TAG, "set - POST position=${this.position}, body.rect=${body.rect.flattenToString()} color=${paint.color}")
+    fun setPosition(playerMovementResult: PlayerMovementResult?) {
+        playerMovementResult?.newPosition?.also {
+            position.set(it.x, it.y)
+        }
     }
 
     companion object {
-        private const val VELOCITY = 8
+        const val VELOCITY = 8.0
         private const val VELOCITY_DASH = 8
     }
 }
