@@ -3,11 +3,12 @@ package com.rittmann.myapplication.main.entity.body
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.graphics.Point
 import android.graphics.Rect
+import com.rittmann.myapplication.main.entity.Position
+import com.rittmann.myapplication.main.extensions.setByPosition
 
 class Collider(var body: Body) {
-    var position = Point()
+    var position = Position()
     var rect = Rect(body.rect)
     private val paint = Paint()
 
@@ -34,10 +35,7 @@ class Collider(var body: Body) {
         canvas.drawRect(rect, paint)
     }
 
-    fun move(position: Point = this.position) {
-        rect.set(position.x - rect.width() / 2,
-                position.y - rect.height() / 2,
-                position.x + rect.width() / 2,
-                position.y + rect.height() / 2)
+    fun move(position: Position = this.position) {
+        rect.setByPosition(position, rect.width(), rect.height())
     }
 }
