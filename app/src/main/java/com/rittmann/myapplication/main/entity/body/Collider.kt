@@ -36,6 +36,6 @@ class Collider(var body: Body) {
     }
 
     fun move(position: Position = this.position) {
-        rect.setByPosition(position, rect.width(), rect.height())
+        rect.setByPosition(position)
     }
 }
