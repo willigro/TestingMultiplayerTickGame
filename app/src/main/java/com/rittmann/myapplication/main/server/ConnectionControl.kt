@@ -167,8 +167,6 @@ class ConnectionControl(
     }
 
     private fun extractPlayerMovement(playerMovementJson: JSONObject): PlayerMovementResult {
-        Log.i(GLOBAL_TAG, playerMovementJson.toString())
-
         val newPosition = playerMovementJson.getJSONObject(DATA_PLAYER_MOVEMENT_NEW_POSITION)
 
         return PlayerMovementResult(

@@ -23,8 +23,8 @@ class SceneMain : Scene {
         if (joystickLeft.isWorking) {
             player?.move(
                 Position(
-                    cos(joystickLeft.angle * Math.PI / 180f) * joystickLeft.strength, // * MatchActivity.SCREEN_DENSITY
-                    -sin(joystickLeft.angle * Math.PI / 180f) * joystickLeft.strength, // Is negative to invert the direction
+                    cos(joystickLeft.angle * Math.PI / 180f) * joystickLeft.strength * MatchActivity.SCREEN_DENSITY, // * MatchActivity.SCREEN_DENSITY
+                    -sin(joystickLeft.angle * Math.PI / 180f) * joystickLeft.strength * MatchActivity.SCREEN_DENSITY, // Is negative to invert the direction
                 ).normalize()
             )
         }
@@ -45,8 +45,8 @@ class SceneMain : Scene {
                     // keep moving util a new position is received
                     it.move(
                         Position(
-                            cos(it.playerMovementResult?.angle.orZero() * Math.PI / 180f) * it.playerMovementResult?.strength.orZero(),
-                            -sin(it.playerMovementResult?.angle.orZero() * Math.PI / 180f) * it.playerMovementResult?.strength.orZero(), // Is negative to invert the direction
+                            cos(it.playerMovementResult?.angle.orZero() * Math.PI / 180f) * it.playerMovementResult?.strength.orZero() * MatchActivity.SCREEN_DENSITY,
+                            -sin(it.playerMovementResult?.angle.orZero() * Math.PI / 180f) * it.playerMovementResult?.strength.orZero() * MatchActivity.SCREEN_DENSITY, // Is negative to invert the direction
                         ).normalize()
                     )
 
