@@ -20,6 +20,7 @@ const val DATA_PLAYER_MOVEMENT = "playerMovement"
 const val DATA_PLAYER_MOVEMENT_ANGLE = "angle"
 const val DATA_PLAYER_MOVEMENT_STRENGTH = "strength"
 const val DATA_PLAYER_MOVEMENT_NEW_POSITION = "newPosition"
+const val DATA_PLAYER_MOVEMENT_VELOCITY = "velocity"
 
 class ConnectionControlListeners(
     private val socket: Socket,

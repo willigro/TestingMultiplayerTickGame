@@ -7,11 +7,7 @@ import com.rittmann.myapplication.main.components.Joystick
 import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.Position
 import com.rittmann.myapplication.main.entity.server.PlayerMovementResult
-import com.rittmann.myapplication.main.extensions.orZero
 import com.rittmann.myapplication.main.match.screen.GLOBAL_TAG
-import com.rittmann.myapplication.main.match.screen.MatchActivity
-import kotlin.math.cos
-import kotlin.math.sin
 
 class SceneMain : Scene {
     private var player: Player? = null
@@ -22,10 +18,8 @@ class SceneMain : Scene {
     override fun update() {
         if (joystickLeft.isWorking) {
             player?.move(
-                Position(
-                    cos(joystickLeft.angle * Math.PI / 180f) * joystickLeft.strength * MatchActivity.SCREEN_DENSITY, // * MatchActivity.SCREEN_DENSITY
-                    -sin(joystickLeft.angle * Math.PI / 180f) * joystickLeft.strength * MatchActivity.SCREEN_DENSITY, // Is negative to invert the direction
-                ).normalize()
+                joystickLeft.angle,
+                joystickLeft.strength,
             )
         }
         player?.update()
@@ -33,24 +27,12 @@ class SceneMain : Scene {
         enemies.forEach {
             if (it.isMoving) {
                 // New position received but it was not updated yet
-                if (it.playerMovementResult?.newPositionApplied?.compareAndSet(
-                        false,
-                        true
-                    ) == true
-                ) {
-                    Log.i(GLOBAL_TAG, "Setting a new position ${it.playerMovementResult?.newPosition}")
+                if (it.playerMovementResult?.newPositionWasApplied() == true) {
                     // force position
                     it.setPosition(it.playerMovementResult)
                 } else {
                     // keep moving util a new position is received
-                    it.move(
-                        Position(
-                            cos(it.playerMovementResult?.angle.orZero() * Math.PI / 180f) * it.playerMovementResult?.strength.orZero() * MatchActivity.SCREEN_DENSITY,
-                            -sin(it.playerMovementResult?.angle.orZero() * Math.PI / 180f) * it.playerMovementResult?.strength.orZero() * MatchActivity.SCREEN_DENSITY, // Is negative to invert the direction
-                        ).normalize()
-                    )
-
-                    Log.i(GLOBAL_TAG, "Going to a new position ${it.position}")
+                    it.moveUsingKeptPlayerMovement()
                 }
 
             }
@@ -89,7 +71,7 @@ class SceneMain : Scene {
     override fun playerMovement(playerMovementResult: PlayerMovementResult) {
         val movedEnemy = enemies.firstOrNull { it.playerId == playerMovementResult.id }
 
-        movedEnemy?.setIsMoving(playerMovementResult)
+        movedEnemy?.keepTheNextPlayerMovement(playerMovementResult)
     }
 
     init {

@@ -18,6 +18,7 @@ fun JSONObject.mapToPlayerMovementResult() : PlayerMovementResult {
             x = newPosition.getDouble(DATA_PLAYER_POSITION_X),
             y = newPosition.getDouble(DATA_PLAYER_POSITION_Y),
         ),
+        velocity = this.getDouble(DATA_PLAYER_MOVEMENT_VELOCITY),
     )
 }
 

@@ -3,13 +3,14 @@ package com.rittmann.myapplication.main.entity
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.util.Log
-import com.rittmann.myapplication.main.entity.body.Collider
-import com.rittmann.myapplication.main.entity.body.Body
 import com.rittmann.myapplication.main.draw.DrawObject
+import com.rittmann.myapplication.main.entity.body.Body
+import com.rittmann.myapplication.main.entity.body.Collider
 import com.rittmann.myapplication.main.entity.server.PlayerMovementResult
 import com.rittmann.myapplication.main.extensions.orZero
-import com.rittmann.myapplication.main.match.screen.GLOBAL_TAG
+import com.rittmann.myapplication.main.match.screen.MatchActivity
+import kotlin.math.cos
+import kotlin.math.sin
 
 const val BODY_WIDTH = 40
 const val BODY_HEIGTH = 40
@@ -28,7 +29,7 @@ data class Player(
     private val paint = Paint()
 
     init {
-        paint.color = Color.WHITE// Color.parseColor("#FFFFFF")
+        paint.color = Color.parseColor(color.ifEmpty { "#FFFFFF" })
     }
 
     override fun update() {
@@ -39,17 +40,43 @@ data class Player(
         canvas.drawRect(body.rect, paint)
     }
 
-    fun setIsMoving(playerMovementResult: PlayerMovementResult?) {
+    fun keepTheNextPlayerMovement(playerMovementResult: PlayerMovementResult?) {
+        // when the angle is bigger than zero it will mean that the joystick (or some movement)
+        // was applied to the player
         this.isMoving = playerMovementResult?.angle.orZero() > 0.0
+
+        // keep the playerMovement
         this.playerMovementResult = playerMovementResult
-        this.playerMovementResult?.newPositionApplied?.set(false)
     }
 
-    fun move(position: Position) {
-        val x = position.x * VELOCITY
-        val y = position.y * VELOCITY
+    fun move(angle: Double, strength: Double) {
+        val normalizedPosition = calculateNormalizedPosition(angle, strength)
+
+        val x = normalizedPosition.x * VELOCITY
+        val y = normalizedPosition.y * VELOCITY
 
         this.position.sum(x, y)
+    }
+
+    fun moveUsingKeptPlayerMovement() {
+        playerMovementResult?.also { playerMovement ->
+            val normalizedPosition = calculateNormalizedPosition(
+                playerMovement.angle.orZero(),
+                playerMovement.strength.orZero()
+            )
+
+            val x = normalizedPosition.x * playerMovement.velocity
+            val y = normalizedPosition.y * playerMovement.velocity
+
+            this.position.sum(x, y)
+        }
+    }
+
+    private fun calculateNormalizedPosition(angle: Double, strength: Double): Position {
+        return Position(
+            cos(angle * Math.PI / 180f) * strength * MatchActivity.SCREEN_DENSITY,
+            -sin(angle * Math.PI / 180f) * strength * MatchActivity.SCREEN_DENSITY, // Is negative to invert the direction
+        ).normalize()
     }
 
     fun setPosition(playerMovementResult: PlayerMovementResult?) {
@@ -60,6 +87,5 @@ data class Player(
 
     companion object {
         const val VELOCITY = 8.0
-        private const val VELOCITY_DASH = 8
     }
 }
