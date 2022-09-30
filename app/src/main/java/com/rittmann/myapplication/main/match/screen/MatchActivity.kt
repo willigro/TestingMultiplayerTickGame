@@ -76,7 +76,13 @@ class MatchActivity : AppCompatActivity(), ConnectionControlEvents {
     }
 
     override fun logCallback(log: String) {
-        runOnUiThread { adapter?.add(log) }
+        runOnUiThread {
+            adapter?.apply {
+                add(log)
+                val listView = findViewById<ListView>(R.id.container_log)
+                listView.setSelection(count - 1)
+            }
+        }
     }
 
     override fun connectionCreated(player: Player) {
