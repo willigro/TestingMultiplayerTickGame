@@ -1,12 +1,13 @@
 package com.rittmann.myapplication.main.server
 
+import com.rittmann.myapplication.main.utils.Logger
 import io.socket.client.IO
 import io.socket.client.Socket
 import java.net.URISyntaxException
 
 class ConnectionControl(
     private val connectionControlEvents: ConnectionControlEvents,
-) {
+) : Logger {
 
     companion object {
         const val EMIT_PLAYER_MOVEMENT = "player movement"
@@ -24,6 +25,18 @@ class ConnectionControl(
 
         socket?.connect()
         configSocketEvents()
+
+        return this
+    }
+
+    fun disconnect(): ConnectionControl {
+        try {
+            socket?.disconnect()
+            connectionControlEvents.logCallback("Disconnecting!")
+        } catch (e: URISyntaxException) {
+            e.printStackTrace()
+            connectionControlEvents.logCallback("Error Disconnecting to IP! $e")
+        }
 
         return this
     }

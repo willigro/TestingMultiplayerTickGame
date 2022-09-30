@@ -30,6 +30,10 @@ class SceneManager {
         scene.newPlayerConnected(player)
     }
 
+    fun playerDisconnected(id: String) {
+        scene.playerDisconnected(id)
+    }
+
     fun onJoystickMovementChanged(angle: Double, strength: Double) {
         scene.onJoystickMovementChanged(angle, strength)
     }

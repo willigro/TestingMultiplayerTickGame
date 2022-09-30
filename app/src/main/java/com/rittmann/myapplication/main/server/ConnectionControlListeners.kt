@@ -50,7 +50,6 @@ class ConnectionControlListeners(
     private fun onEventDisconnect() = with(socket) {
         on(Socket.EVENT_DISCONNECT) {
             connectionControlEvents.logCallback("EVENT_DISCONNECT")
-            socket.emit("message", "hi")
         }
     }
 
@@ -106,6 +105,7 @@ class ConnectionControlListeners(
                 val id = data.getString(DATA_PLAYER_ID)
                 val players = data.getString(DATA_PLAYERS)
                 connectionControlEvents.logCallback("PLAYER_DISCONNECTED! $id\nRemain Player: $players")
+                connectionControlEvents.playerDisconnected(id)
             } catch (e: JSONException) {
                 e.printStackTrace()
                 connectionControlEvents.logCallback("PLAYER_DISCONNECTED Error!")

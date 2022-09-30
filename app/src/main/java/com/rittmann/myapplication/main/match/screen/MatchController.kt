@@ -12,6 +12,10 @@ class MatchController(private val connectionControl: ConnectionControl) {
         connectionControl.connect()
     }
 
+    fun disconnect() {
+        connectionControl.disconnect()
+    }
+
     fun sendPlayerPosition(playerMovementEmit: PlayerMovementEmit, playerAimEmit: PlayerAimEmit) {
         connectionControl.emit(
             ConnectionControl.EMIT_PLAYER_MOVEMENT, Gson().toJson(

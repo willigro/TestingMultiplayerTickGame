@@ -76,6 +76,10 @@ class GamePanel(
         sceneManager.playerMovement(playerMovementWrapResult)
     }
 
+    fun playerDisconnected(id: String) {
+        sceneManager.playerDisconnected(id)
+    }
+
     init {
         holder.addCallback(this)
         sceneManager = SceneManager()

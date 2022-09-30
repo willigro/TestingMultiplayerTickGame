@@ -8,6 +8,7 @@ import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.Position
 import com.rittmann.myapplication.main.entity.server.PlayerMovementWrapResult
 import com.rittmann.myapplication.main.match.screen.GLOBAL_TAG
+import com.rittmann.myapplication.main.utils.INVALID_ID
 
 class SceneMain : Scene {
     private var player: Player? = null
@@ -55,6 +56,14 @@ class SceneMain : Scene {
 
     override fun newPlayerConnected(player: Player) {
         enemies.add(player)
+    }
+
+    override fun playerDisconnected(id: String) {
+        val index = enemies.indexOfFirst { it.playerId == id }
+
+        if (index != INVALID_ID) {
+            enemies.removeAt(index)
+        }
     }
 
     override fun onJoystickMovementChanged(angle: Double, strength: Double) {

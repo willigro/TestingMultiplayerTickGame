@@ -9,4 +9,5 @@ interface ConnectionControlEvents {
     fun connectionCreated(player: Player)
     fun newPlayerConnected(player: Player)
     fun playerMovementWrapResult(playerMovementWrapResult: PlayerMovementWrapResult)
+    fun playerDisconnected(id: String)
 }

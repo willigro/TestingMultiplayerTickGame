@@ -13,6 +13,7 @@ interface Scene {
     fun receiveTouch(motionEvent: MotionEvent)
     fun ownPlayerCreated(player: Player)
     fun newPlayerConnected(player: Player)
+    fun playerDisconnected(id: String)
     fun onJoystickMovementChanged(angle: Double, strength: Double)
     fun onJoystickAimChanged(angle: Double, strength: Double)
     fun getPlayerPosition(): Position
