@@ -12,8 +12,9 @@ import com.rittmann.myapplication.main.entity.Position
 import com.rittmann.myapplication.main.entity.server.PlayerMovementResult
 import com.rittmann.myapplication.main.scene.SceneManager
 
-class GamePanel(context: Context?) : SurfaceView(context),
-    DrawObject, SurfaceHolder.Callback {
+class GamePanel(
+    context: Context
+) : SurfaceView(context), DrawObject, SurfaceHolder.Callback {
 
     private var gameMainThread: GameMainThread? = null
     private val sceneManager: SceneManager
@@ -34,6 +35,7 @@ class GamePanel(context: Context?) : SurfaceView(context),
     }
 
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {}
+
     override fun surfaceDestroyed(holder: SurfaceHolder) {
         try {
             gameMainThread?.setRunning(false)
