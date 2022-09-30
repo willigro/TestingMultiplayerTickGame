@@ -1,9 +1,9 @@
 package com.rittmann.myapplication.main.match.screen
 
 import com.google.gson.Gson
-import com.rittmann.myapplication.main.entity.Player
-import com.rittmann.myapplication.main.entity.Position
+import com.rittmann.myapplication.main.entity.server.PlayerAimEmit
 import com.rittmann.myapplication.main.entity.server.PlayerMovementEmit
+import com.rittmann.myapplication.main.entity.server.PlayerMovementWrapEmit
 import com.rittmann.myapplication.main.server.ConnectionControl
 
 class MatchController(private val connectionControl: ConnectionControl) {
@@ -12,15 +12,12 @@ class MatchController(private val connectionControl: ConnectionControl) {
         connectionControl.connect()
     }
 
-    fun sendPlayerPosition(position: Position, angle: Double, strength: Double) {
+    fun sendPlayerPosition(playerMovementEmit: PlayerMovementEmit, playerAimEmit: PlayerAimEmit) {
         connectionControl.emit(
-            ConnectionControl.EMIT_PLAYER_MOVED, Gson().toJson(
-                PlayerMovementEmit(
-                    x = position.x,
-                    y = position.y,
-                    angle = angle,
-                    strength = strength,
-                    velocity = Player.VELOCITY,
+            ConnectionControl.EMIT_PLAYER_MOVEMENT, Gson().toJson(
+                PlayerMovementWrapEmit(
+                    playerMovementEmit = playerMovementEmit,
+                    playerAimEmit = playerAimEmit,
                 )
             )
         )

@@ -2,27 +2,42 @@ package com.rittmann.myapplication.main.server
 
 import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.Position
+import com.rittmann.myapplication.main.entity.server.PlayerAimResult
 import com.rittmann.myapplication.main.entity.server.PlayerMovementResult
+import com.rittmann.myapplication.main.entity.server.PlayerMovementWrapResult
 import org.json.JSONObject
 
-fun JSONObject.mapToPlayerMovementResult() : PlayerMovementResult {
-    val newPosition = this.getJSONObject(DATA_PLAYER_MOVEMENT_NEW_POSITION)
+fun JSONObject.mapToPlayerMovementResult(): PlayerMovementWrapResult {
+    val playerMovementResultJson = this.getJSONObject(DATA_PLAYER_MOVEMENT)
+    val playerAimResultJson = this.getJSONObject(DATA_PLAYER_AIM)
 
-    return PlayerMovementResult(
-        id = this.getString(DATA_PLAYER_ID),
-        x = this.getDouble(DATA_PLAYER_POSITION_X),
-        y = this.getDouble(DATA_PLAYER_POSITION_Y),
-        angle = this.getDouble(DATA_PLAYER_MOVEMENT_ANGLE),
-        strength = this.getDouble(DATA_PLAYER_MOVEMENT_STRENGTH),
+    val newPosition = playerMovementResultJson.getJSONObject(DATA_PLAYER_MOVEMENT_NEW_POSITION)
+
+    val playerMovementResult = PlayerMovementResult(
+        x = playerMovementResultJson.getDouble(DATA_PLAYER_POSITION_X),
+        y = playerMovementResultJson.getDouble(DATA_PLAYER_POSITION_Y),
+        angle = playerMovementResultJson.getDouble(DATA_PLAYER_MOVEMENT_ANGLE),
+        strength = playerMovementResultJson.getDouble(DATA_PLAYER_MOVEMENT_STRENGTH),
         newPosition = Position(
             x = newPosition.getDouble(DATA_PLAYER_POSITION_X),
             y = newPosition.getDouble(DATA_PLAYER_POSITION_Y),
         ),
-        velocity = this.getDouble(DATA_PLAYER_MOVEMENT_VELOCITY),
+        velocity = playerMovementResultJson.getDouble(DATA_PLAYER_MOVEMENT_VELOCITY),
+    )
+
+    val playerAimResult = PlayerAimResult(
+        angle = playerAimResultJson.getDouble(DATA_PLAYER_MOVEMENT_ANGLE),
+        strength = playerAimResultJson.getDouble(DATA_PLAYER_MOVEMENT_STRENGTH),
+    )
+
+    return PlayerMovementWrapResult(
+        id = this.getString(DATA_PLAYER_ID),
+        playerMovementResult = playerMovementResult,
+        playerAimResult = playerAimResult,
     )
 }
 
-fun JSONObject.mapToPlayer() : Player {
+fun JSONObject.mapToPlayer(): Player {
     val positionJson = this.getJSONObject(DATA_PLAYER_POSITION)
     val player = Player(
         playerId = this.getString(DATA_PLAYER_ID),

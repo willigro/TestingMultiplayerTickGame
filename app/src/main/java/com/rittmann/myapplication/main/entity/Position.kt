@@ -1,5 +1,6 @@
 package com.rittmann.myapplication.main.entity
 
+import com.rittmann.myapplication.main.utils.Logger
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.atan2
@@ -12,7 +13,7 @@ import kotlin.math.sqrt
 data class Position(
     var x: Double = 0.0,
     var y: Double = 0.0,
-) {
+) : Logger {
 
     fun set(x: Double, y: Double) {
         this.x = x

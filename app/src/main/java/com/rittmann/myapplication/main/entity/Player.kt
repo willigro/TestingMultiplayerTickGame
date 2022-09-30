@@ -6,14 +6,16 @@ import android.graphics.Paint
 import com.rittmann.myapplication.main.draw.DrawObject
 import com.rittmann.myapplication.main.entity.body.Body
 import com.rittmann.myapplication.main.entity.body.Collider
+import com.rittmann.myapplication.main.entity.server.PlayerAimResult
 import com.rittmann.myapplication.main.entity.server.PlayerMovementResult
+import com.rittmann.myapplication.main.entity.server.PlayerMovementWrapResult
 import com.rittmann.myapplication.main.extensions.orZero
 import com.rittmann.myapplication.main.match.screen.MatchActivity
 import kotlin.math.cos
 import kotlin.math.sin
 
 const val BODY_WIDTH = 40
-const val BODY_HEIGTH = 40
+const val BODY_HEIGHT = 40
 
 data class Player(
     val playerId: String = "",
@@ -21,10 +23,11 @@ data class Player(
     val color: String = "",
 ) : DrawObject {
 
-    private val body: Body = Body(BODY_WIDTH, BODY_HEIGTH)
+    private val body: Body = Body(BODY_WIDTH, BODY_HEIGHT)
     private val collider: Collider = Collider(body)
     var isMoving: Boolean = false
-    var playerMovementResult: PlayerMovementResult? = null
+    var isAiming: Boolean = false
+    var playerMovementResult: PlayerMovementWrapResult? = null
 
     private val paint = Paint()
 
@@ -33,20 +36,50 @@ data class Player(
     }
 
     override fun update() {
+        if (isMoving) {
+            // New position received but it was not updated yet
+            if (playerMovementResult?.playerMovementResult?.wasPositionApplied() == true) {
+                // force position
+                setPosition(playerMovementResult?.playerMovementResult)
+            } else {
+                // keep moving util a new position is received
+                moveUsingKeptPlayerMovement()
+            }
+        }
+
+        if (isAiming) {
+            // New position received but it was not updated yet
+            if (playerMovementResult?.playerAimResult?.wasAimApplied() == true) {
+                // force position
+                aim(playerMovementResult?.playerAimResult)
+            } else {
+                // keep moving util a new position is received
+                aimUsingKeptPlayerMovement()
+            }
+        }
+
         body.move(position)
     }
 
     override fun draw(canvas: Canvas) {
+        canvas.save()
+        canvas.rotate(
+            -body.rotationAngle.toFloat(),
+            (position.x).toFloat(),
+            (position.y).toFloat()
+        )
         canvas.drawRect(body.rect, paint)
+        canvas.restore()
     }
 
-    fun keepTheNextPlayerMovement(playerMovementResult: PlayerMovementResult?) {
+    fun keepTheNextPlayerMovement(playerMovementWrapResult: PlayerMovementWrapResult?) {
         // when the angle is bigger than zero it will mean that the joystick (or some movement)
         // was applied to the player
-        this.isMoving = playerMovementResult?.angle.orZero() > 0.0
+        this.isMoving = playerMovementWrapResult?.playerMovementResult?.angle.orZero() > 0.0
+        this.isAiming = playerMovementWrapResult?.playerAimResult?.angle.orZero() > 0.0
 
         // keep the playerMovement
-        this.playerMovementResult = playerMovementResult
+        this.playerMovementResult = playerMovementWrapResult
     }
 
     fun move(angle: Double, strength: Double) {
@@ -58,8 +91,8 @@ data class Player(
         this.position.sum(x, y)
     }
 
-    fun moveUsingKeptPlayerMovement() {
-        playerMovementResult?.also { playerMovement ->
+    private fun moveUsingKeptPlayerMovement() {
+        playerMovementResult?.playerMovementResult?.also { playerMovement ->
             val normalizedPosition = calculateNormalizedPosition(
                 playerMovement.angle.orZero(),
                 playerMovement.strength.orZero()
@@ -72,6 +105,12 @@ data class Player(
         }
     }
 
+    private fun aimUsingKeptPlayerMovement() {
+        playerMovementResult?.playerAimResult?.also { playerAim ->
+            aim(playerAim.angle)
+        }
+    }
+
     private fun calculateNormalizedPosition(angle: Double, strength: Double): Position {
         return Position(
             cos(angle * Math.PI / 180f) * strength * MatchActivity.SCREEN_DENSITY,
@@ -79,9 +118,19 @@ data class Player(
         ).normalize()
     }
 
-    fun setPosition(playerMovementResult: PlayerMovementResult?) {
+    private fun setPosition(playerMovementResult: PlayerMovementResult?) {
         playerMovementResult?.newPosition?.also {
             position.set(it.x, it.y)
+        }
+    }
+
+    fun aim(angle: Double) {
+        body.setRotation(angle)
+    }
+
+    private fun aim(playerAimResult: PlayerAimResult?) {
+        playerAimResult?.angle?.also {
+            aim(it)
         }
     }
 

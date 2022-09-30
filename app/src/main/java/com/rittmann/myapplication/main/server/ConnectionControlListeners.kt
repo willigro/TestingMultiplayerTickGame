@@ -1,5 +1,6 @@
 package com.rittmann.myapplication.main.server
 
+import com.rittmann.myapplication.main.utils.Logger
 import io.socket.client.Socket
 import org.json.JSONException
 import org.json.JSONObject
@@ -7,7 +8,7 @@ import org.json.JSONObject
 const val ON_NEW_PLAYER_CONNECTED = "new player connected"
 const val ON_PLAYER_CREATED = "player created"
 const val ON_PLAYER_DISCONNECTED = "player disconnected"
-const val ON_PLAYER_MOVED = "players moved"
+const val ON_PLAYER_MOVEMENT = "players movement"
 
 const val DATA_PLAYER_ID = "id"
 const val DATA_PLAYER_POSITION = "position"
@@ -16,16 +17,19 @@ const val DATA_PLAYER_POSITION_Y = "y"
 const val DATA_PLAYER_COLOR = "color"
 const val DATA_PLAYERS = "players"
 const val DATA_NEW_PLAYER = "newPlayer"
+
+const val DATA_PLAYER_MOVEMENT_RESULT = "playerMovementResult"
 const val DATA_PLAYER_MOVEMENT = "playerMovement"
 const val DATA_PLAYER_MOVEMENT_ANGLE = "angle"
 const val DATA_PLAYER_MOVEMENT_STRENGTH = "strength"
 const val DATA_PLAYER_MOVEMENT_NEW_POSITION = "newPosition"
 const val DATA_PLAYER_MOVEMENT_VELOCITY = "velocity"
+const val DATA_PLAYER_AIM = "playerAim"
 
 class ConnectionControlListeners(
     private val socket: Socket,
     private val connectionControlEvents: ConnectionControlEvents
-) {
+) : Logger {
 
     init {
         onEventConnect()
@@ -34,7 +38,7 @@ class ConnectionControlListeners(
         onPlayerCreated()
         onNewPlayerConnected()
         onPlayerDisconnected()
-        onPlayerMoved()
+        onPlayerMovement()
     }
 
     private fun onEventConnect() = with(socket) {
@@ -109,14 +113,15 @@ class ConnectionControlListeners(
         }
     }
 
-    private fun onPlayerMoved() = with(socket) {
-        on(ON_PLAYER_MOVED) { args ->
+    private fun onPlayerMovement() = with(socket) {
+        on(ON_PLAYER_MOVEMENT) { args ->
             val data = args[0] as JSONObject
-            try {
-                val playerMovement = data.getJSONObject(DATA_PLAYER_MOVEMENT)
 
-                connectionControlEvents.logCallback("ON_PLAYER_MOVED Player Movement: $playerMovement")
-                connectionControlEvents.playerMovement(playerMovement.mapToPlayerMovementResult())
+            try {
+                val playerMovementResult = data.getJSONObject(DATA_PLAYER_MOVEMENT_RESULT)
+
+                connectionControlEvents.logCallback("ON_PLAYER_MOVED Player Movement Result: $playerMovementResult")
+                connectionControlEvents.playerMovementWrapResult(playerMovementResult.mapToPlayerMovementResult())
             } catch (e: JSONException) {
                 e.printStackTrace()
                 connectionControlEvents.logCallback("ON_PLAYER_MOVED Error")

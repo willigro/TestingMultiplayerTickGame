@@ -5,6 +5,7 @@ import android.view.MotionEvent
 import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.Position
 import com.rittmann.myapplication.main.entity.server.PlayerMovementResult
+import com.rittmann.myapplication.main.entity.server.PlayerMovementWrapResult
 
 class SceneManager {
     private val scene: Scene
@@ -29,16 +30,20 @@ class SceneManager {
         scene.newPlayerConnected(player)
     }
 
-    fun setJoystickLeftValues(angle: Double, strength: Double) {
-        scene.setJoystickLeftValues(angle, strength)
+    fun onJoystickMovementChanged(angle: Double, strength: Double) {
+        scene.onJoystickMovementChanged(angle, strength)
+    }
+
+    fun onJoystickAimChanged(angle: Double, strength: Double) {
+        scene.onJoystickAimChanged(angle, strength)
     }
 
     fun getPlayerPosition(): Position {
         return scene.getPlayerPosition()
     }
 
-    fun playerMovement(playerMovementResult: PlayerMovementResult) {
-        scene.playerMovement(playerMovementResult)
+    fun playerMovement(playerMovementWrapResult: PlayerMovementWrapResult) {
+        scene.playerMovement(playerMovementWrapResult)
     }
 
     init {

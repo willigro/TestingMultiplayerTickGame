@@ -10,7 +10,10 @@ import com.rittmann.myapplication.R
 import com.rittmann.myapplication.main.components.JoystickView
 import com.rittmann.myapplication.main.core.GamePanel
 import com.rittmann.myapplication.main.entity.Player
+import com.rittmann.myapplication.main.entity.server.PlayerAimEmit
+import com.rittmann.myapplication.main.entity.server.PlayerMovementEmit
 import com.rittmann.myapplication.main.entity.server.PlayerMovementResult
+import com.rittmann.myapplication.main.entity.server.PlayerMovementWrapResult
 import com.rittmann.myapplication.main.server.ConnectionControl
 import com.rittmann.myapplication.main.server.ConnectionControlEvents
 
@@ -25,6 +28,14 @@ class MatchActivity : AppCompatActivity(), ConnectionControlEvents {
     }
     private var gamePanel: GamePanel? = null
     private var adapter: ArrayAdapter<String?>? = null
+
+    private val joystickLeft: JoystickView by lazy {
+        findViewById(R.id.joystick_left)
+    }
+
+    private val joystickRight: JoystickView by lazy {
+        findViewById(R.id.joystick_right)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,13 +64,45 @@ class MatchActivity : AppCompatActivity(), ConnectionControlEvents {
             addView(gamePanel)
         }
 
-        findViewById<JoystickView>(R.id.joystick_left).setOnMoveListener { angle, strength ->
+        /**
+         * TODO: check later a better way to send these information, since I'm going to send the
+         *  movement and aim every time it changes, and I guess it isn't a good idea when there are
+         *  several requests
+         *  - Maybe creating a queue of requests and send X requests per T time
+         * */
+        joystickLeft.setOnMoveListener { angle, strength ->
             gamePanel?.apply {
-                setJoystickLeftValues(angle, strength)
-
-                matchController.sendPlayerPosition(getPlayerPosition(), angle, strength)
+                onJoystickMovementChanged(angle, strength)
+                sendPlayerMovement()
             }
+        }
 
+        joystickRight.setOnMoveListener { angle, strength ->
+            gamePanel?.apply {
+                onJoystickAimChanged(angle, strength)
+                sendPlayerMovement()
+            }
+        }
+    }
+
+    private fun sendPlayerMovement() {
+        gamePanel?.apply {
+            val playerPosition = getPlayerPosition()
+
+            matchController.sendPlayerPosition(
+                playerMovementEmit = PlayerMovementEmit(
+                    x = playerPosition.x,
+                    y = playerPosition.y,
+                    angle = joystickLeft.angle,
+                    strength = joystickLeft.strength,
+                    velocity = Player.VELOCITY,
+                ),
+
+                playerAimEmit = PlayerAimEmit(
+                    angle = joystickRight.angle,
+                    strength = joystickRight.strength,
+                )
+            )
         }
     }
 
@@ -93,7 +136,7 @@ class MatchActivity : AppCompatActivity(), ConnectionControlEvents {
         gamePanel?.newPlayerConnected(player)
     }
 
-    override fun playerMovement(playerMovementResult: PlayerMovementResult) {
-        gamePanel?.playerMovement(playerMovementResult)
+    override fun playerMovementWrapResult(playerMovementWrapResult: PlayerMovementWrapResult) {
+        gamePanel?.playerMovement(playerMovementWrapResult)
     }
 }

@@ -10,6 +10,7 @@ import com.rittmann.myapplication.main.draw.DrawObject
 import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.Position
 import com.rittmann.myapplication.main.entity.server.PlayerMovementResult
+import com.rittmann.myapplication.main.entity.server.PlayerMovementWrapResult
 import com.rittmann.myapplication.main.scene.SceneManager
 
 class GamePanel(
@@ -59,16 +60,20 @@ class GamePanel(
         sceneManager.newPlayerConnected(player)
     }
 
-    fun setJoystickLeftValues(angle: Double, strength: Double) {
-        sceneManager.setJoystickLeftValues(angle, strength)
+    fun onJoystickMovementChanged(angle: Double, strength: Double) {
+        sceneManager.onJoystickMovementChanged(angle, strength)
+    }
+
+    fun onJoystickAimChanged(angle: Double, strength: Double) {
+        sceneManager.onJoystickAimChanged(angle, strength)
     }
 
     fun getPlayerPosition(): Position {
         return sceneManager.getPlayerPosition()
     }
 
-    fun playerMovement(playerMovementResult: PlayerMovementResult) {
-        sceneManager.playerMovement(playerMovementResult)
+    fun playerMovement(playerMovementWrapResult: PlayerMovementWrapResult) {
+        sceneManager.playerMovement(playerMovementWrapResult)
     }
 
     init {

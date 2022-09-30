@@ -437,8 +437,8 @@ public class JoystickView extends View implements Runnable {
 
         // to move the button according to the finger coordinate
         // (or limited to one axe according to direction option
-        mPosY = mButtonDirection < 0 ? mCenterY :  event.getY(); // direction negative is horizontal axe
-        mPosX = mButtonDirection > 0 ? mCenterX :   event.getX(); // direction positive is vertical axe
+        mPosY = mButtonDirection < 0 ? mCenterY : event.getY(); // direction negative is horizontal axe
+        mPosX = mButtonDirection > 0 ? mCenterX : event.getX(); // direction positive is vertical axe
 
         if (event.getAction() == MotionEvent.ACTION_UP) {
 
@@ -539,7 +539,7 @@ public class JoystickView extends View implements Runnable {
      *
      * @return the angle of the button
      */
-    private double getAngle() {
+    public double getAngle() {
         double angle = Math.toDegrees(Math.atan2(mCenterY - mPosY, mPosX - mCenterX));
         return angle < 0.0 ? angle + 360 : angle; // make it as a regular counter-clock protractor
     }
@@ -550,7 +550,7 @@ public class JoystickView extends View implements Runnable {
      *
      * @return the strength of the button
      */
-    private double getStrength() {
+    public double getStrength() {
         return (100 * Math.sqrt((mPosX - mCenterX)
                 * (mPosX - mCenterX) + (mPosY - mCenterY)
                 * (mPosY - mCenterY)) / mBorderRadius);

@@ -16,16 +16,15 @@
 
     <com.rittmann.myapplication.main.components.JoystickView
         android:id="@+id/joystick_left"
-        android:layout_width="100dp"
-        android:layout_height="wrap_content"
-        app:JV_backgroundColor="#009688"
-        app:JV_borderColor="#00796B"
-        app:JV_borderWidth="4dp"
-        app:JV_buttonColor="#FF6E40"
-        app:JV_buttonSizeRatio="40%"
-        app:JV_fixedCenter="false"
+        style="@style/Joystick.Demo"
         app:layout_constraintBottom_toBottomOf="@id/guideline"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <com.rittmann.myapplication.main.components.JoystickView
+        android:id="@+id/joystick_right"
+        style="@style/Joystick.Demo"
+        app:layout_constraintBottom_toBottomOf="@id/guideline"
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline"

@@ -1,7 +1,5 @@
 package com.rittmann.myapplication.main.server
 
-import com.rittmann.myapplication.main.entity.Player
-import com.rittmann.myapplication.main.entity.server.PlayerMovementResult
 import io.socket.client.IO
 import io.socket.client.Socket
 import java.net.URISyntaxException
@@ -11,7 +9,7 @@ class ConnectionControl(
 ) {
 
     companion object {
-        const val EMIT_PLAYER_MOVED = "player moved"
+        const val EMIT_PLAYER_MOVEMENT = "player movement"
     }
 
     private var socket: Socket? = null
@@ -41,9 +39,3 @@ class ConnectionControl(
     }
 }
 
-interface ConnectionControlEvents {
-    fun logCallback(log: String)
-    fun connectionCreated(player: Player)
-    fun newPlayerConnected(player: Player)
-    fun playerMovement(playerMovementResult: PlayerMovementResult)
-}

@@ -6,36 +6,33 @@ import android.view.MotionEvent
 import com.rittmann.myapplication.main.components.Joystick
 import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.Position
-import com.rittmann.myapplication.main.entity.server.PlayerMovementResult
+import com.rittmann.myapplication.main.entity.server.PlayerMovementWrapResult
 import com.rittmann.myapplication.main.match.screen.GLOBAL_TAG
 
 class SceneMain : Scene {
     private var player: Player? = null
     private var enemies: ArrayList<Player> = arrayListOf()
 
-    private var joystickLeft: Joystick = Joystick()
+    private var joystickMovement: Joystick = Joystick()
+    private var joystickAim: Joystick = Joystick()
 
     override fun update() {
-        if (joystickLeft.isWorking) {
+        if (joystickMovement.isWorking) {
             player?.move(
-                joystickLeft.angle,
-                joystickLeft.strength,
+                joystickMovement.angle,
+                joystickMovement.strength,
             )
         }
+
+        if (joystickAim.isWorking) {
+            player?.aim(
+                joystickAim.angle,
+            )
+        }
+
         player?.update()
 
         enemies.forEach {
-            if (it.isMoving) {
-                // New position received but it was not updated yet
-                if (it.playerMovementResult?.newPositionWasApplied() == true) {
-                    // force position
-                    it.setPosition(it.playerMovementResult)
-                } else {
-                    // keep moving util a new position is received
-                    it.moveUsingKeptPlayerMovement()
-                }
-
-            }
             it.update()
         }
     }
@@ -60,18 +57,22 @@ class SceneMain : Scene {
         enemies.add(player)
     }
 
-    override fun setJoystickLeftValues(angle: Double, strength: Double) {
-        joystickLeft.set(angle, strength)
+    override fun onJoystickMovementChanged(angle: Double, strength: Double) {
+        joystickMovement.set(angle, strength)
+    }
+
+    override fun onJoystickAimChanged(angle: Double, strength: Double) {
+        joystickAim.set(angle, strength)
     }
 
     override fun getPlayerPosition(): Position {
         return player?.position ?: Position()
     }
 
-    override fun playerMovement(playerMovementResult: PlayerMovementResult) {
-        val movedEnemy = enemies.firstOrNull { it.playerId == playerMovementResult.id }
+    override fun playerMovement(playerMovementWrapResult: PlayerMovementWrapResult) {
+        val movedEnemy = enemies.firstOrNull { it.playerId == playerMovementWrapResult.id }
 
-        movedEnemy?.keepTheNextPlayerMovement(playerMovementResult)
+        movedEnemy?.keepTheNextPlayerMovement(playerMovementWrapResult)
     }
 
     init {
