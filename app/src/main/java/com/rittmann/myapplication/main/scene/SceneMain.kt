@@ -4,9 +4,11 @@ import android.graphics.Canvas
 import android.util.Log
 import android.view.MotionEvent
 import com.rittmann.myapplication.main.components.Joystick
+import com.rittmann.myapplication.main.entity.Collidable
 import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.Position
 import com.rittmann.myapplication.main.entity.server.PlayerMovementWrapResult
+import com.rittmann.myapplication.main.entity.verifyCollisions
 import com.rittmann.myapplication.main.match.screen.GLOBAL_TAG
 import com.rittmann.myapplication.main.utils.INVALID_ID
 
@@ -16,6 +18,8 @@ class SceneMain : Scene {
 
     private var joystickMovement: Joystick = Joystick()
     private var joystickAim: Joystick = Joystick()
+
+    private val collidables: ArrayList<Collidable> = arrayListOf()
 
     override fun update() {
         if (joystickMovement.isWorking) {
@@ -36,6 +40,8 @@ class SceneMain : Scene {
         enemies.forEach {
             it.update()
         }
+
+        collidables.verifyCollisions()
     }
 
     override fun draw(canvas: Canvas) {
@@ -52,10 +58,14 @@ class SceneMain : Scene {
 
     override fun ownPlayerCreated(player: Player) {
         this.player = player
+
+        collidables.add(player)
     }
 
     override fun newPlayerConnected(player: Player) {
         enemies.add(player)
+
+        collidables.add(player)
     }
 
     override fun playerDisconnected(id: String) {

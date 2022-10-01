@@ -12,3 +12,11 @@ data class PlayerMovementWrapResult(
     @SerializedName("playerMovement") val playerMovementResult: PlayerMovementResult,
     @SerializedName("playerAim") val playerAimResult: PlayerAimResult,
 )
+
+fun PlayerMovementWrapResult?.wasPositionApplied(): Boolean {
+    return this?.playerMovementResult?.wasPositionApplied() == true
+}
+
+fun PlayerMovementWrapResult?.wasAimApplied(): Boolean {
+    return this?.playerAimResult?.wasAimApplied() == true
+}

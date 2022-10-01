@@ -9,8 +9,11 @@ import com.rittmann.myapplication.main.entity.body.Collider
 import com.rittmann.myapplication.main.entity.server.PlayerAimResult
 import com.rittmann.myapplication.main.entity.server.PlayerMovementResult
 import com.rittmann.myapplication.main.entity.server.PlayerMovementWrapResult
+import com.rittmann.myapplication.main.entity.server.wasAimApplied
+import com.rittmann.myapplication.main.entity.server.wasPositionApplied
 import com.rittmann.myapplication.main.extensions.orZero
 import com.rittmann.myapplication.main.match.screen.MatchActivity
+import com.rittmann.myapplication.main.utils.Logger
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -21,12 +24,25 @@ data class Player(
     val playerId: String = "",
     val position: Position = Position(),
     val color: String = "",
-) : DrawObject {
+) : DrawObject, Collidable, Logger {
 
     private val body: Body = Body(BODY_WIDTH, BODY_HEIGHT)
-    private val collider: Collider = Collider(body)
+
+    private val collider: Collider = Collider(BODY_WIDTH, BODY_HEIGHT)
+
+    /*
+    * Player is moving
+    * */
     var isMoving: Boolean = false
+
+    /*
+    * Player is aiming (moving the aim joystick)
+    * */
     var isAiming: Boolean = false
+
+    /*
+    * Keep the player movement and aim data got from the server
+    * */
     var playerMovementResult: PlayerMovementWrapResult? = null
 
     private val paint = Paint()
@@ -38,7 +54,7 @@ data class Player(
     override fun update() {
         if (isMoving) {
             // New position received but it was not updated yet
-            if (playerMovementResult?.playerMovementResult?.wasPositionApplied() == true) {
+            if (playerMovementResult.wasPositionApplied()) {
                 // force position
                 setPosition(playerMovementResult?.playerMovementResult)
             } else {
@@ -49,7 +65,7 @@ data class Player(
 
         if (isAiming) {
             // New position received but it was not updated yet
-            if (playerMovementResult?.playerAimResult?.wasAimApplied() == true) {
+            if (playerMovementResult.wasAimApplied()) {
                 // force position
                 aim(playerMovementResult?.playerAimResult)
             } else {
@@ -131,6 +147,21 @@ data class Player(
     private fun aim(playerAimResult: PlayerAimResult?) {
         playerAimResult?.angle?.also {
             aim(it)
+        }
+    }
+
+    override fun retrieveCollider(): Collider {
+        return collider
+    }
+
+    override fun collidingWith(collidable: Collidable) {
+        when (collidable) {
+            is Bullet -> {
+                "Player $playerId is Touching a bullet".log()
+            }
+            is Player -> {
+                "Player $playerId is Touching a player".log()
+            }
         }
     }
 
