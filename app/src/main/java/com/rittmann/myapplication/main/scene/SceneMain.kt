@@ -11,8 +11,9 @@ import com.rittmann.myapplication.main.entity.server.PlayerMovementWrapResult
 import com.rittmann.myapplication.main.entity.verifyCollisions
 import com.rittmann.myapplication.main.match.screen.GLOBAL_TAG
 import com.rittmann.myapplication.main.utils.INVALID_ID
+import com.rittmann.myapplication.main.utils.Logger
 
-class SceneMain : Scene {
+class SceneMain : Scene, Logger {
     private var player: Player? = null
     private var enemies: ArrayList<Player> = arrayListOf()
 
@@ -33,6 +34,10 @@ class SceneMain : Scene {
             player?.aim(
                 joystickAim.angle,
             )
+
+            if (joystickAim.strength > 80f) {
+                player?.shot()
+            }
         }
 
         player?.update()

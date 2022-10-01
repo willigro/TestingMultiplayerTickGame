@@ -27,6 +27,7 @@ data class Player(
 ) : DrawObject, Collidable, Logger {
 
     private val body: Body = Body(BODY_WIDTH, BODY_HEIGHT)
+    private val mainGunPointer: Pointer = Pointer()
 
     private val collider: Collider = Collider(BODY_WIDTH, BODY_HEIGHT)
 
@@ -75,6 +76,7 @@ data class Player(
         }
 
         body.move(position)
+        mainGunPointer.move(position.x + BODY_WIDTH, position.y + (BODY_HEIGHT / 2))
     }
 
     override fun draw(canvas: Canvas) {
@@ -85,7 +87,26 @@ data class Player(
             (position.y).toFloat()
         )
         canvas.drawRect(body.rect, paint)
+
+        // it will rotate together to the body
+        mainGunPointer.draw(canvas)
+
         canvas.restore()
+    }
+
+    override fun retrieveCollider(): Collider {
+        return collider
+    }
+
+    override fun collidingWith(collidable: Collidable) {
+        when (collidable) {
+            is Bullet -> {
+                "Player $playerId is Touching a bullet".log()
+            }
+            is Player -> {
+                "Player $playerId is Touching a player".log()
+            }
+        }
     }
 
     fun keepTheNextPlayerMovement(playerMovementWrapResult: PlayerMovementWrapResult?) {
@@ -150,19 +171,8 @@ data class Player(
         }
     }
 
-    override fun retrieveCollider(): Collider {
-        return collider
-    }
+    fun shot() {
 
-    override fun collidingWith(collidable: Collidable) {
-        when (collidable) {
-            is Bullet -> {
-                "Player $playerId is Touching a bullet".log()
-            }
-            is Player -> {
-                "Player $playerId is Touching a player".log()
-            }
-        }
     }
 
     companion object {

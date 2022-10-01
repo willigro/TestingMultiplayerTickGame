@@ -64,10 +64,7 @@ class MatchActivity : AppCompatActivity(), ConnectionControlEvents, Logger {
     private fun setupUi() {
         configureListViewLog()
 
-        findViewById<ViewGroup>(R.id.container).apply {
-
-            addView(gamePanel)
-        }
+        findViewById<ViewGroup>(R.id.container).addView(gamePanel)
 
         /**
          * TODO: check later a better way to send these information, since I'm going to send the

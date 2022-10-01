@@ -13,6 +13,10 @@ abstract class PhysicObject(var width: Int, var heigth: Int) : Logger {
         rect.setByPosition(position, width, heigth)
     }
 
+    fun move(x: Double, y: Double) {
+        rect.setByPosition(x, y, width, heigth)
+    }
+
     fun setRotation(angle: Double) {
         rotationAngle = angle
     }
