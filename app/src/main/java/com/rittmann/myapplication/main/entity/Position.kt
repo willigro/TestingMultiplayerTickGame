@@ -1,5 +1,6 @@
 package com.rittmann.myapplication.main.entity
 
+import com.rittmann.myapplication.main.match.screen.MatchActivity
 import com.rittmann.myapplication.main.utils.Logger
 import kotlin.math.PI
 import kotlin.math.abs
@@ -20,19 +21,50 @@ data class Position(
         this.y = y
     }
 
+    fun set(position: Position) {
+        this.x = position.x
+        this.y = position.y
+    }
+
     fun sum(x: Double, y: Double) {
         this.x += x
         this.y += y
     }
 
-    fun multiple(l: Double) {
-        this.x *= l
-        this.y *= l
+    fun sumNew(x: Double, y: Double): Position {
+        return Position(this.x + x, this.y + y)
     }
 
-    fun multiple(x: Double, y: Double) {
+    fun sumNew(value: Double): Position {
+        return Position(this.x + value, this.y + value)
+    }
+
+    fun sumNew(position: Position): Position {
+        return Position(this.x, this.y).sum(position)
+    }
+
+    fun sum(value: Double): Position {
+        this.x += value
+        this.y += value
+        return this
+    }
+
+    fun sum(position: Position): Position {
+        this.x += position.x
+        this.y += position.y
+        return this
+    }
+
+    fun multiple(l: Double): Position {
+        this.x *= l
+        this.y *= l
+        return this
+    }
+
+    fun multiple(x: Double, y: Double): Position {
         this.x *= x
         this.y *= y
+        return this
     }
 
     fun length(): Double {
@@ -90,5 +122,14 @@ data class Position(
         }
 
         return this
+    }
+
+    companion object {
+        fun calculateNormalizedPosition(angle: Double, strength: Double = 1.0): Position {
+            return Position(
+                cos(angle * Math.PI / 180f) * strength * MatchActivity.SCREEN_DENSITY,
+                -sin(angle * Math.PI / 180f) * strength * MatchActivity.SCREEN_DENSITY, // Is negative to invert the direction
+            ).normalize()
+        }
     }
 }

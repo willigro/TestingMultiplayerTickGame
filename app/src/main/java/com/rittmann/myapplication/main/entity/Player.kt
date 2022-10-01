@@ -12,10 +12,7 @@ import com.rittmann.myapplication.main.entity.server.PlayerMovementWrapResult
 import com.rittmann.myapplication.main.entity.server.wasAimApplied
 import com.rittmann.myapplication.main.entity.server.wasPositionApplied
 import com.rittmann.myapplication.main.extensions.orZero
-import com.rittmann.myapplication.main.match.screen.MatchActivity
 import com.rittmann.myapplication.main.utils.Logger
-import kotlin.math.cos
-import kotlin.math.sin
 
 const val BODY_WIDTH = 40
 const val BODY_HEIGHT = 40
@@ -26,8 +23,13 @@ data class Player(
     val color: String = "",
 ) : DrawObject, Collidable, Logger {
 
+    private var _bulletTest: ArrayList<Bullet> = arrayListOf()
     private val body: Body = Body(BODY_WIDTH, BODY_HEIGHT)
-    private val mainGunPointer: Pointer = Pointer()
+    private val mainGunPointer: Pointer = Pointer(
+        position.copy(),
+        BODY_WIDTH.toDouble(),
+        BODY_HEIGHT.toDouble(),
+    )
 
     private val collider: Collider = Collider(BODY_WIDTH, BODY_HEIGHT)
 
@@ -76,10 +78,12 @@ data class Player(
         }
 
         body.move(position)
-        mainGunPointer.move(position.x + BODY_WIDTH, position.y + (BODY_HEIGHT / 2))
+
+        _bulletTest.forEach { it.update() }
     }
 
     override fun draw(canvas: Canvas) {
+        // rotate and in its own axis
         canvas.save()
         canvas.rotate(
             -body.rotationAngle.toFloat(),
@@ -87,11 +91,11 @@ data class Player(
             (position.y).toFloat()
         )
         canvas.drawRect(body.rect, paint)
+        canvas.restore()
 
-        // it will rotate together to the body
         mainGunPointer.draw(canvas)
 
-        canvas.restore()
+        _bulletTest.forEach { it.draw(canvas) }
     }
 
     override fun retrieveCollider(): Collider {
@@ -120,17 +124,19 @@ data class Player(
     }
 
     fun move(angle: Double, strength: Double) {
-        val normalizedPosition = calculateNormalizedPosition(angle, strength)
+        val normalizedPosition = Position.calculateNormalizedPosition(angle, strength)
 
         val x = normalizedPosition.x * VELOCITY
         val y = normalizedPosition.y * VELOCITY
 
         this.position.sum(x, y)
+
+        mainGunPointer.moveAndRotate(x, y)
     }
 
     private fun moveUsingKeptPlayerMovement() {
         playerMovementResult?.playerMovementResult?.also { playerMovement ->
-            val normalizedPosition = calculateNormalizedPosition(
+            val normalizedPosition = Position.calculateNormalizedPosition(
                 playerMovement.angle.orZero(),
                 playerMovement.strength.orZero()
             )
@@ -139,6 +145,16 @@ data class Player(
             val y = normalizedPosition.y * playerMovement.velocity
 
             this.position.sum(x, y)
+
+            mainGunPointer.moveAndRotate(x, y)
+        }
+    }
+
+    private fun setPosition(playerMovementResult: PlayerMovementResult?) {
+        playerMovementResult?.newPosition?.also {
+            position.set(it.x, it.y)
+
+            mainGunPointer.moveAndRotate(it.x, it.y)
         }
     }
 
@@ -148,21 +164,10 @@ data class Player(
         }
     }
 
-    private fun calculateNormalizedPosition(angle: Double, strength: Double): Position {
-        return Position(
-            cos(angle * Math.PI / 180f) * strength * MatchActivity.SCREEN_DENSITY,
-            -sin(angle * Math.PI / 180f) * strength * MatchActivity.SCREEN_DENSITY, // Is negative to invert the direction
-        ).normalize()
-    }
-
-    private fun setPosition(playerMovementResult: PlayerMovementResult?) {
-        playerMovementResult?.newPosition?.also {
-            position.set(it.x, it.y)
-        }
-    }
-
     fun aim(angle: Double) {
         body.setRotation(angle)
+
+        mainGunPointer.setRotation(angle)
     }
 
     private fun aim(playerAimResult: PlayerAimResult?) {
@@ -171,8 +176,24 @@ data class Player(
         }
     }
 
+    var lastTime = 0L
     fun shot() {
+        val currentTime = System.currentTimeMillis()
 
+        if (lastTime > 0L && currentTime - lastTime < 500) return
+        lastTime = System.currentTimeMillis()
+
+        val pointerPosition = mainGunPointer.getRotatedPosition()
+        val bullet = Bullet(
+            bulletId = "",
+            position = Position(
+                x = pointerPosition.x,
+                y = pointerPosition.y
+            ),
+            angle = body.rotationAngle,
+        )
+
+        _bulletTest.add(bullet)
     }
 
     companion object {

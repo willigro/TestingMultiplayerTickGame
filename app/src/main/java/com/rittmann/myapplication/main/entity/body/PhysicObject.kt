@@ -5,19 +5,21 @@ import com.rittmann.myapplication.main.entity.Position
 import com.rittmann.myapplication.main.extensions.setByPosition
 import com.rittmann.myapplication.main.utils.Logger
 
+const val DEFAULT_ROTATION = 360.0
+
 abstract class PhysicObject(var width: Int, var heigth: Int) : Logger {
     var rect: Rect = Rect(width, heigth, width, heigth)
-    var rotationAngle: Double = 0.0
+    var rotationAngle: Double = DEFAULT_ROTATION
 
-    fun move(position: Position) {
+    open fun move(position: Position) {
         rect.setByPosition(position, width, heigth)
     }
 
-    fun move(x: Double, y: Double) {
+    open fun move(x: Double, y: Double) {
         rect.setByPosition(x, y, width, heigth)
     }
 
-    fun setRotation(angle: Double) {
+    open fun setRotation(angle: Double) {
         rotationAngle = angle
     }
 }
