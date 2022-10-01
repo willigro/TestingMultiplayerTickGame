@@ -5,12 +5,12 @@ import com.rittmann.myapplication.main.entity.Position
 import com.rittmann.myapplication.main.extensions.setByPosition
 import com.rittmann.myapplication.main.utils.Logger
 
-open class PhysicObject(var width: Int, var height: Int) : Logger {
-    var rect: Rect = Rect(width, height, width, height)
+abstract class PhysicObject(var width: Int, var heigth: Int) : Logger {
+    var rect: Rect = Rect(width, heigth, width, heigth)
     var rotationAngle: Double = 0.0
 
     fun move(position: Position) {
-        rect.setByPosition(position)
+        rect.setByPosition(position, width, heigth)
     }
 
     fun setRotation(angle: Double) {
