@@ -9,11 +9,14 @@ import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.Position
 import com.rittmann.myapplication.main.entity.server.PlayerMovementWrapResult
 import com.rittmann.myapplication.main.entity.verifyCollisions
+import com.rittmann.myapplication.main.match.MatchEvents
 import com.rittmann.myapplication.main.match.screen.GLOBAL_TAG
 import com.rittmann.myapplication.main.utils.INVALID_ID
 import com.rittmann.myapplication.main.utils.Logger
 
-class SceneMain : Scene, Logger {
+class SceneMain(
+    private val matchEvents: MatchEvents,
+) : Scene, Logger {
     private var player: Player? = null
     private var enemies: ArrayList<Player> = arrayListOf()
 
@@ -23,30 +26,35 @@ class SceneMain : Scene, Logger {
     private val collidables: ArrayList<Collidable> = arrayListOf()
 
     override fun update() {
-        if (joystickMovement.isWorking) {
-            player?.move(
-                joystickMovement.angle,
-                joystickMovement.strength,
-            )
-        }
-
-        if (joystickAim.isWorking) {
-            player?.aim(
-                joystickAim.angle,
-            )
-
-            if (joystickAim.strength > 80f) {
-                player?.shot()
+        player?.also { player ->
+            if (joystickMovement.isWorking) {
+                player.move(
+                    joystickMovement.angle,
+                    joystickMovement.strength,
+                )
             }
+
+            if (joystickAim.isWorking) {
+                player.aim(
+                    joystickAim.angle,
+                )
+
+                // create a const
+                if (joystickAim.strength > 80f) {
+                    player.shot()?.also { bullet ->
+                        matchEvents.shoot(player, bullet)
+                    }
+                }
+            }
+
+            player.update()
+
+            enemies.forEach {
+                it.update()
+            }
+
+            collidables.verifyCollisions()
         }
-
-        player?.update()
-
-        enemies.forEach {
-            it.update()
-        }
-
-        collidables.verifyCollisions()
     }
 
     override fun draw(canvas: Canvas) {

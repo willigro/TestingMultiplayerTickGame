@@ -6,9 +6,16 @@ import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.Position
 import com.rittmann.myapplication.main.entity.server.PlayerMovementResult
 import com.rittmann.myapplication.main.entity.server.PlayerMovementWrapResult
+import com.rittmann.myapplication.main.match.MatchEvents
 
-class SceneManager {
+class SceneManager(
+    matchEvents: MatchEvents,
+) {
     private val scene: Scene
+
+    init {
+        scene = SceneMain(matchEvents)
+    }
 
     fun receiveTouch(motionEvent: MotionEvent) {
         scene.receiveTouch(motionEvent)
@@ -48,9 +55,5 @@ class SceneManager {
 
     fun playerMovement(playerMovementWrapResult: PlayerMovementWrapResult) {
         scene.playerMovement(playerMovementWrapResult)
-    }
-
-    init {
-        scene = SceneMain()
     }
 }

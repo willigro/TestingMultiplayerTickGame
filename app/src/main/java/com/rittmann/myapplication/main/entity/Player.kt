@@ -177,10 +177,10 @@ data class Player(
     }
 
     var lastTime = 0L
-    fun shot() {
+    fun shot() : Bullet? {
         val currentTime = System.currentTimeMillis()
 
-        if (lastTime > 0L && currentTime - lastTime < 500) return
+        if (lastTime > 0L && currentTime - lastTime < 500) return null
         lastTime = System.currentTimeMillis()
 
         val pointerPosition = mainGunPointer.getRotatedPosition()
@@ -194,6 +194,7 @@ data class Player(
         )
 
         _bulletTest.add(bullet)
+        return bullet
     }
 
     companion object {

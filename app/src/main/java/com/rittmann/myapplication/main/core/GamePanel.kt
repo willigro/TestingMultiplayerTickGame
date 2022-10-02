@@ -9,16 +9,26 @@ import android.view.SurfaceView
 import com.rittmann.myapplication.main.draw.DrawObject
 import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.Position
-import com.rittmann.myapplication.main.entity.server.PlayerMovementResult
 import com.rittmann.myapplication.main.entity.server.PlayerMovementWrapResult
+import com.rittmann.myapplication.main.match.MatchEvents
 import com.rittmann.myapplication.main.scene.SceneManager
 
 class GamePanel(
-    context: Context
+    context: Context,
 ) : SurfaceView(context), DrawObject, SurfaceHolder.Callback {
 
     private var gameMainThread: GameMainThread? = null
-    private val sceneManager: SceneManager
+    private lateinit var sceneManager: SceneManager
+
+    init {
+        holder.addCallback(this)
+        isFocusable = true
+    }
+
+    fun build(matchEvents: MatchEvents): GamePanel {
+        sceneManager = SceneManager(matchEvents)
+        return this
+    }
 
     override fun update() {
         sceneManager.update()
@@ -78,11 +88,5 @@ class GamePanel(
 
     fun playerDisconnected(id: String) {
         sceneManager.playerDisconnected(id)
-    }
-
-    init {
-        holder.addCallback(this)
-        sceneManager = SceneManager()
-        isFocusable = true
     }
 }

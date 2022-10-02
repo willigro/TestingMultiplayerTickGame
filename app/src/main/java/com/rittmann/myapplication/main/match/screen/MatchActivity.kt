@@ -9,17 +9,19 @@ import androidx.appcompat.app.AppCompatActivity
 import com.rittmann.myapplication.R
 import com.rittmann.myapplication.main.components.JoystickView
 import com.rittmann.myapplication.main.core.GamePanel
+import com.rittmann.myapplication.main.entity.Bullet
 import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.server.PlayerAimEmit
 import com.rittmann.myapplication.main.entity.server.PlayerMovementEmit
 import com.rittmann.myapplication.main.entity.server.PlayerMovementWrapResult
+import com.rittmann.myapplication.main.match.MatchEvents
 import com.rittmann.myapplication.main.server.ConnectionControl
 import com.rittmann.myapplication.main.server.ConnectionControlEvents
 import com.rittmann.myapplication.main.utils.Logger
 
 const val GLOBAL_TAG = "TAGGING"
 
-class MatchActivity : AppCompatActivity(), ConnectionControlEvents, Logger {
+class MatchActivity : AppCompatActivity(), ConnectionControlEvents, MatchEvents, Logger {
 
     private val matchController: MatchController by lazy {
         MatchController(
@@ -45,7 +47,7 @@ class MatchActivity : AppCompatActivity(), ConnectionControlEvents, Logger {
 
         fetchScreenValues()
 
-        gamePanel = GamePanel(this)
+        gamePanel = GamePanel(this).build(this)
 
         setupUi()
     }
@@ -144,5 +146,9 @@ class MatchActivity : AppCompatActivity(), ConnectionControlEvents, Logger {
 
     override fun playerDisconnected(id: String) {
         gamePanel?.playerDisconnected(id)
+    }
+
+    override fun shoot(player: Player, bullet: Bullet) {
+        matchController.shoot(player, bullet)
     }
 }

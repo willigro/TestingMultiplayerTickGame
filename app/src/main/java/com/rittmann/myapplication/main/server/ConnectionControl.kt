@@ -11,6 +11,7 @@ class ConnectionControl(
 
     companion object {
         const val EMIT_PLAYER_MOVEMENT = "player movement"
+        const val EMIT_PLAYER_SHOOTING = "player shooting"
     }
 
     private var socket: Socket? = null

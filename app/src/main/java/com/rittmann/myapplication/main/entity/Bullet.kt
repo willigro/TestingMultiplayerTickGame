@@ -9,6 +9,7 @@ import com.rittmann.myapplication.main.entity.body.Collider
 import com.rittmann.myapplication.main.utils.Logger
 
 private const val BULLET_SIZE = 15
+const val BULLET_VELOCITY = 10.0
 
 class Bullet(
     val bulletId: String,
@@ -21,7 +22,6 @@ class Bullet(
     }
     private val collider: Collider = Collider(BULLET_SIZE, BULLET_SIZE)
     private val paint: Paint = Paint()
-    private val velocity = 10.0
 
     init {
         paint.color = Color.RED
@@ -33,8 +33,8 @@ class Bullet(
             angle
         )
 
-        val x = normalizedPosition.x * velocity
-        val y = normalizedPosition.y * velocity
+        val x = normalizedPosition.x * BULLET_VELOCITY
+        val y = normalizedPosition.y * BULLET_VELOCITY
 
         position.sum(x, y)
 
