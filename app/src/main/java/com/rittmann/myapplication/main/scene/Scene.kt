@@ -5,6 +5,7 @@ import android.view.MotionEvent
 import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.Position
 import com.rittmann.myapplication.main.entity.server.PlayerMovementWrapResult
+import com.rittmann.myapplication.main.entity.server.PlayerShootingResponseWrap
 
 interface Scene {
     fun update()
@@ -18,4 +19,5 @@ interface Scene {
     fun onJoystickAimChanged(angle: Double, strength: Double)
     fun getPlayerPosition(): Position
     fun playerMovement(playerMovementWrapResult: PlayerMovementWrapResult)
+    fun onPlayerEnemyShooting(shootingResponseWrap: PlayerShootingResponseWrap)
 }

@@ -4,16 +4,16 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import com.rittmann.myapplication.main.draw.DrawObject
-import com.rittmann.myapplication.main.entity.body.PhysicObject
+import com.rittmann.myapplication.main.entity.body.PhysicObjectRect
 import com.rittmann.myapplication.main.extensions.setByPosition
 
 private const val POINTER_SIZE = 10
 
 class Pointer(
-    var position: Position = Position(),
+    position: Position,
     var distanceX: Double,
     var distanceY: Double,
-) : PhysicObject(POINTER_SIZE, POINTER_SIZE), DrawObject {
+) : PhysicObjectRect(position, POINTER_SIZE, POINTER_SIZE), DrawObject {
 
     private val paint = Paint()
 
@@ -26,6 +26,8 @@ class Pointer(
     override fun draw(canvas: Canvas) {
         canvas.drawRect(rect, paint)
     }
+
+    override fun free() {}
 
     override fun setRotation(angle: Double) {
         super.setRotation(angle)
@@ -45,11 +47,11 @@ class Pointer(
         )
 
         position.sumNew(normalizedPosition.multiple(distanceX, distanceY)).apply {
-            rect.setByPosition(this.x, this.y, width, heigth)
+            rect.setByPosition(this.x, this.y, width, height)
         }
     }
 
-    fun getRotatedPosition() : Position {
+    fun getRotatedPosition(): Position {
         val normalizedPosition = Position.calculateNormalizedPosition(
             rotationAngle
         )

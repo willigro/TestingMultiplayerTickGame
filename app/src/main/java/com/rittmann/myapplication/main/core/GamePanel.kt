@@ -10,6 +10,7 @@ import com.rittmann.myapplication.main.draw.DrawObject
 import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.Position
 import com.rittmann.myapplication.main.entity.server.PlayerMovementWrapResult
+import com.rittmann.myapplication.main.entity.server.PlayerShootingResponseWrap
 import com.rittmann.myapplication.main.match.MatchEvents
 import com.rittmann.myapplication.main.scene.SceneManager
 
@@ -38,6 +39,8 @@ class GamePanel(
         super.draw(canvas)
         sceneManager.draw(canvas)
     }
+
+    override fun free() {}
 
     override fun surfaceCreated(holder: SurfaceHolder) {
         gameMainThread = GameMainThread(getHolder(), this)
@@ -88,5 +91,9 @@ class GamePanel(
 
     fun playerDisconnected(id: String) {
         sceneManager.playerDisconnected(id)
+    }
+
+    fun onPlayerEnemyShooting(shootingResponseWrap: PlayerShootingResponseWrap) {
+        sceneManager.onPlayerEnemyShooting(shootingResponseWrap)
     }
 }

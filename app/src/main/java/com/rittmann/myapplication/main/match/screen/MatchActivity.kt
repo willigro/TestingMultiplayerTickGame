@@ -14,6 +14,7 @@ import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.server.PlayerAimEmit
 import com.rittmann.myapplication.main.entity.server.PlayerMovementEmit
 import com.rittmann.myapplication.main.entity.server.PlayerMovementWrapResult
+import com.rittmann.myapplication.main.entity.server.PlayerShootingResponseWrap
 import com.rittmann.myapplication.main.match.MatchEvents
 import com.rittmann.myapplication.main.server.ConnectionControl
 import com.rittmann.myapplication.main.server.ConnectionControlEvents
@@ -146,6 +147,10 @@ class MatchActivity : AppCompatActivity(), ConnectionControlEvents, MatchEvents,
 
     override fun playerDisconnected(id: String) {
         gamePanel?.playerDisconnected(id)
+    }
+
+    override fun onPlayerEnemyShooting(shootingResponseWrap: PlayerShootingResponseWrap) {
+        gamePanel?.onPlayerEnemyShooting(shootingResponseWrap)
     }
 
     override fun shoot(player: Player, bullet: Bullet) {

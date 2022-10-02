@@ -1,10 +1,12 @@
 package com.rittmann.myapplication.main.server
 
+import com.rittmann.myapplication.main.entity.Bullet
 import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.Position
 import com.rittmann.myapplication.main.entity.server.PlayerAimResult
 import com.rittmann.myapplication.main.entity.server.PlayerMovementResult
 import com.rittmann.myapplication.main.entity.server.PlayerMovementWrapResult
+import com.rittmann.myapplication.main.entity.server.PlayerShootingResponseWrap
 import org.json.JSONObject
 
 fun JSONObject.mapToPlayerMovementResult(): PlayerMovementWrapResult {
@@ -49,4 +51,21 @@ fun JSONObject.mapToPlayer(): Player {
     )
 
     return player
+}
+
+fun JSONObject.mapToPlayerShootingResponseWrap(): PlayerShootingResponseWrap {
+    val positionJson = this.getJSONObject(DATA_PLAYER_POSITION)
+    val bullet = Bullet(
+        bulletId = "",
+        position = Position(
+            x = positionJson.getDouble(DATA_PLAYER_POSITION_X),
+            y = positionJson.getDouble(DATA_PLAYER_POSITION_Y),
+        ),
+        angle = this.getDouble(DATA_PLAYER_MOVEMENT_ANGLE),
+    )
+
+    return PlayerShootingResponseWrap(
+        this.getString(DATA_PLAYER_ID),
+        bullet,
+    )
 }

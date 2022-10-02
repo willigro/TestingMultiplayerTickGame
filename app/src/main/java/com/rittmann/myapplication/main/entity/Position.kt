@@ -8,6 +8,7 @@ import kotlin.math.atan2
 import kotlin.math.ceil
 import kotlin.math.cos
 import kotlin.math.floor
+import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.math.sqrt
 
@@ -68,7 +69,7 @@ data class Position(
     }
 
     fun length(): Double {
-        return sqrt(x * x + y * y);
+        return sqrt((x * x) + (y * y));
     }
 
     fun direction(): Double {
@@ -124,11 +125,17 @@ data class Position(
         return this
     }
 
+    fun distance(position: Position): Double {
+        return sqrt(
+            (position.x - x).pow(2.0) + (position.y - y).pow(2.0)
+        )
+    }
+
     companion object {
         fun calculateNormalizedPosition(angle: Double, strength: Double = 1.0): Position {
             return Position(
-                cos(angle * Math.PI / 180f) * strength * MatchActivity.SCREEN_DENSITY,
-                -sin(angle * Math.PI / 180f) * strength * MatchActivity.SCREEN_DENSITY, // Is negative to invert the direction
+                cos(angle * Math.PI / 180f) * strength,
+                -sin(angle * Math.PI / 180f) * strength, // Is negative to invert the direction
             ).normalize()
         }
     }

@@ -5,7 +5,8 @@ import android.graphics.Color
 import android.graphics.Paint
 import com.rittmann.myapplication.main.draw.DrawObject
 import com.rittmann.myapplication.main.entity.body.Body
-import com.rittmann.myapplication.main.entity.body.Collider
+import com.rittmann.myapplication.main.entity.collisor.Collidable
+import com.rittmann.myapplication.main.entity.collisor.Collider
 import com.rittmann.myapplication.main.utils.Logger
 
 private const val BULLET_SIZE = 15
@@ -17,16 +18,16 @@ class Bullet(
     val angle: Double,
 ) : DrawObject, Collidable, Logger {
 
-    private val body: Body = Body(BULLET_SIZE, BULLET_SIZE).apply {
+    private var initialPosition: Position = position.copy()
+    private val body: Body = Body(position.copy(), BULLET_SIZE, BULLET_SIZE).apply {
         setRotation(angle)
     }
-    private val collider: Collider = Collider(BULLET_SIZE, BULLET_SIZE)
+    private val collider: Collider = Collider(position.copy(), BULLET_SIZE, BULLET_SIZE, this)
     private val paint: Paint = Paint()
 
     init {
         paint.color = Color.RED
     }
-
 
     override fun update() {
         val normalizedPosition = Position.calculateNormalizedPosition(
@@ -39,10 +40,15 @@ class Bullet(
         position.sum(x, y)
 
         body.move(position)
+        collider.move(position)
     }
 
     override fun draw(canvas: Canvas) {
         canvas.drawRect(body.rect, paint)
+    }
+
+    override fun free() {
+        retrieveCollider().free()
     }
 
     override fun retrieveCollider(): Collider {
@@ -59,4 +65,6 @@ class Bullet(
             }
         }
     }
+
+    fun isFree(): Boolean = initialPosition.distance(position) >= 200.0
 }

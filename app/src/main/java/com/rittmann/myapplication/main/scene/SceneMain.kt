@@ -4,15 +4,16 @@ import android.graphics.Canvas
 import android.util.Log
 import android.view.MotionEvent
 import com.rittmann.myapplication.main.components.Joystick
-import com.rittmann.myapplication.main.entity.Collidable
 import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.Position
+import com.rittmann.myapplication.main.entity.collisor.GlobalCollisions
 import com.rittmann.myapplication.main.entity.server.PlayerMovementWrapResult
-import com.rittmann.myapplication.main.entity.verifyCollisions
+import com.rittmann.myapplication.main.entity.server.PlayerShootingResponseWrap
 import com.rittmann.myapplication.main.match.MatchEvents
 import com.rittmann.myapplication.main.match.screen.GLOBAL_TAG
 import com.rittmann.myapplication.main.utils.INVALID_ID
 import com.rittmann.myapplication.main.utils.Logger
+
 
 class SceneMain(
     private val matchEvents: MatchEvents,
@@ -22,8 +23,6 @@ class SceneMain(
 
     private var joystickMovement: Joystick = Joystick()
     private var joystickAim: Joystick = Joystick()
-
-    private val collidables: ArrayList<Collidable> = arrayListOf()
 
     override fun update() {
         player?.also { player ->
@@ -53,7 +52,7 @@ class SceneMain(
                 it.update()
             }
 
-            collidables.verifyCollisions()
+            GlobalCollisions.verifyCollisions()
         }
     }
 
@@ -70,15 +69,13 @@ class SceneMain(
     }
 
     override fun ownPlayerCreated(player: Player) {
+        player.retrieveCollider().enable()
         this.player = player
-
-        collidables.add(player)
     }
 
     override fun newPlayerConnected(player: Player) {
+        player.retrieveCollider().enable()
         enemies.add(player)
-
-        collidables.add(player)
     }
 
     override fun playerDisconnected(id: String) {
@@ -105,6 +102,12 @@ class SceneMain(
         val movedEnemy = enemies.firstOrNull { it.playerId == playerMovementWrapResult.id }
 
         movedEnemy?.keepTheNextPlayerMovement(playerMovementWrapResult)
+    }
+
+    override fun onPlayerEnemyShooting(shootingResponseWrap: PlayerShootingResponseWrap) {
+        val enemyShooting = enemies.firstOrNull { it.playerId == shootingResponseWrap.playerId }
+
+        enemyShooting?.shot(shootingResponseWrap)
     }
 
     init {

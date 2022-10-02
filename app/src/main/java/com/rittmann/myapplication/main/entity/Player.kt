@@ -5,10 +5,12 @@ import android.graphics.Color
 import android.graphics.Paint
 import com.rittmann.myapplication.main.draw.DrawObject
 import com.rittmann.myapplication.main.entity.body.Body
-import com.rittmann.myapplication.main.entity.body.Collider
+import com.rittmann.myapplication.main.entity.collisor.Collidable
+import com.rittmann.myapplication.main.entity.collisor.Collider
 import com.rittmann.myapplication.main.entity.server.PlayerAimResult
 import com.rittmann.myapplication.main.entity.server.PlayerMovementResult
 import com.rittmann.myapplication.main.entity.server.PlayerMovementWrapResult
+import com.rittmann.myapplication.main.entity.server.PlayerShootingResponseWrap
 import com.rittmann.myapplication.main.entity.server.wasAimApplied
 import com.rittmann.myapplication.main.entity.server.wasPositionApplied
 import com.rittmann.myapplication.main.extensions.orZero
@@ -24,14 +26,14 @@ data class Player(
 ) : DrawObject, Collidable, Logger {
 
     private var _bulletTest: ArrayList<Bullet> = arrayListOf()
-    private val body: Body = Body(BODY_WIDTH, BODY_HEIGHT)
+    private val body: Body = Body(position.copy(), BODY_WIDTH, BODY_HEIGHT)
     private val mainGunPointer: Pointer = Pointer(
         position.copy(),
         BODY_WIDTH.toDouble(),
         BODY_HEIGHT.toDouble(),
     )
 
-    private val collider: Collider = Collider(BODY_WIDTH, BODY_HEIGHT)
+    private val collider: Collider = Collider(position.copy(), BODY_WIDTH, BODY_HEIGHT, this)
 
     /*
     * Player is moving
@@ -46,7 +48,7 @@ data class Player(
     /*
     * Keep the player movement and aim data got from the server
     * */
-    var playerMovementResult: PlayerMovementWrapResult? = null
+    private var playerMovementResult: PlayerMovementWrapResult? = null
 
     private val paint = Paint()
 
@@ -55,17 +57,37 @@ data class Player(
     }
 
     override fun update() {
-        if (isMoving) {
-            // New position received but it was not updated yet
-            if (playerMovementResult.wasPositionApplied()) {
-                // force position
-                setPosition(playerMovementResult?.playerMovementResult)
+        updatePlayerMovement()
+        updatePlayerAim()
+        updateBodyPosition()
+        updateColliderPosition()
+        updateBullets()
+    }
+
+    private fun updateColliderPosition() {
+        collider.move(position)
+    }
+
+    private fun updateBullets() {
+        val bulletIterator = _bulletTest.iterator()
+
+        while (bulletIterator.hasNext()) {
+            val currentBullet = bulletIterator.next()
+
+            if (currentBullet.isFree()) {
+                currentBullet.free()
+                bulletIterator.remove()
             } else {
-                // keep moving util a new position is received
-                moveUsingKeptPlayerMovement()
+                currentBullet.update()
             }
         }
+    }
 
+    private fun updateBodyPosition() {
+        body.move(position)
+    }
+
+    private fun updatePlayerAim() {
         if (isAiming) {
             // New position received but it was not updated yet
             if (playerMovementResult.wasAimApplied()) {
@@ -76,10 +98,19 @@ data class Player(
                 aimUsingKeptPlayerMovement()
             }
         }
+    }
 
-        body.move(position)
-
-        _bulletTest.forEach { it.update() }
+    private fun updatePlayerMovement() {
+        if (isMoving) {
+            // New position received but it was not updated yet
+            if (playerMovementResult.wasPositionApplied()) {
+                // force position
+                setPosition(playerMovementResult?.playerMovementResult)
+            } else {
+                // keep moving util a new position is received
+                moveUsingKeptPlayerMovement()
+            }
+        }
     }
 
     override fun draw(canvas: Canvas) {
@@ -96,6 +127,10 @@ data class Player(
         mainGunPointer.draw(canvas)
 
         _bulletTest.forEach { it.draw(canvas) }
+    }
+
+    override fun free() {
+        retrieveCollider().free()
     }
 
     override fun retrieveCollider(): Collider {
@@ -177,7 +212,7 @@ data class Player(
     }
 
     var lastTime = 0L
-    fun shot() : Bullet? {
+    fun shot(): Bullet? {
         val currentTime = System.currentTimeMillis()
 
         if (lastTime > 0L && currentTime - lastTime < 500) return null
@@ -193,6 +228,20 @@ data class Player(
             angle = body.rotationAngle,
         )
 
+        bullet.retrieveCollider().enable()
+        _bulletTest.add(bullet)
+        return bullet
+    }
+
+    fun shot(shootingResponseWrap: PlayerShootingResponseWrap): Bullet? {
+        val currentTime = System.currentTimeMillis()
+
+        if (lastTime > 0L && currentTime - lastTime < 500) return null
+        lastTime = System.currentTimeMillis()
+
+        val bullet = shootingResponseWrap.bullet
+
+        bullet.retrieveCollider().enable()
         _bulletTest.add(bullet)
         return bullet
     }

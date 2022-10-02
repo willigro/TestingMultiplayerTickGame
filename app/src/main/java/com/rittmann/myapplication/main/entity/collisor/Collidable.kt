@@ -1,6 +1,4 @@
-package com.rittmann.myapplication.main.entity
-
-import com.rittmann.myapplication.main.entity.body.Collider
+package com.rittmann.myapplication.main.entity.collisor
 
 /**
  * TODO: this collisions will be used only for graphic matter, since that who will really check
@@ -25,7 +23,7 @@ fun List<Collidable>.verifyCollisions() {
         *
         *   This way, I'll prevent checking the same combination twice
         */
-        if (i + 1 < this.lastIndex) {
+        if (i + 1 <= this.lastIndex) {
             for (j in i + 1 until this.size) {
                 val collidableOne = this[i]
                 val collidableTwo = this[j]

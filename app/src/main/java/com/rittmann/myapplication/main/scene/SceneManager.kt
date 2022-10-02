@@ -4,8 +4,8 @@ import android.graphics.Canvas
 import android.view.MotionEvent
 import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.Position
-import com.rittmann.myapplication.main.entity.server.PlayerMovementResult
 import com.rittmann.myapplication.main.entity.server.PlayerMovementWrapResult
+import com.rittmann.myapplication.main.entity.server.PlayerShootingResponseWrap
 import com.rittmann.myapplication.main.match.MatchEvents
 
 class SceneManager(
@@ -55,5 +55,9 @@ class SceneManager(
 
     fun playerMovement(playerMovementWrapResult: PlayerMovementWrapResult) {
         scene.playerMovement(playerMovementWrapResult)
+    }
+
+    fun onPlayerEnemyShooting(shootingResponseWrap: PlayerShootingResponseWrap) {
+        scene.onPlayerEnemyShooting(shootingResponseWrap)
     }
 }

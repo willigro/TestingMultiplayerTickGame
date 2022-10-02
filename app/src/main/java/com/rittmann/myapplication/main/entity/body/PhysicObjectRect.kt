@@ -7,16 +7,18 @@ import com.rittmann.myapplication.main.utils.Logger
 
 const val DEFAULT_ROTATION = 360.0
 
-abstract class PhysicObject(var width: Int, var heigth: Int) : Logger {
-    var rect: Rect = Rect(width, heigth, width, heigth)
+abstract class PhysicObjectRect(var position: Position, var width: Int, var height: Int) : Logger {
+    var rect: Rect = Rect(width, height, width, height)
     var rotationAngle: Double = DEFAULT_ROTATION
 
     open fun move(position: Position) {
-        rect.setByPosition(position, width, heigth)
+        position.set(position)
+        rect.setByPosition(position, width, height)
     }
 
     open fun move(x: Double, y: Double) {
-        rect.setByPosition(x, y, width, heigth)
+        position.set(x, y)
+        rect.setByPosition(x, y, width, height)
     }
 
     open fun setRotation(angle: Double) {
