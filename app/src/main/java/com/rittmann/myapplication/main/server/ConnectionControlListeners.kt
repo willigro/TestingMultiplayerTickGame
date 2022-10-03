@@ -8,8 +8,6 @@ import org.json.JSONObject
 const val ON_NEW_PLAYER_CONNECTED = "new player connected"
 const val ON_PLAYER_CREATED = "player created"
 const val ON_PLAYER_DISCONNECTED = "player disconnected"
-const val ON_PLAYER_MOVEMENT = "players movement"
-const val ON_PLAYER_SHOOTING = "player shooting"
 const val ON_WORLD_STATE = "world state"
 
 const val DATA_PLAYER_ID = "id"
@@ -20,12 +18,9 @@ const val DATA_PLAYER_COLOR = "color"
 const val DATA_PLAYERS = "players"
 const val DATA_NEW_PLAYER = "newPlayer"
 
-const val DATA_RESULT = "result"
-const val DATA_PLAYER_MOVEMENT_RESULT = "playerMovementResult"
 const val DATA_PLAYER_MOVEMENT = "playerMovement"
 const val DATA_PLAYER_MOVEMENT_ANGLE = "angle"
 const val DATA_PLAYER_MOVEMENT_STRENGTH = "strength"
-const val DATA_PLAYER_MOVEMENT_NEW_POSITION = "newPosition"
 const val DATA_PLAYER_MOVEMENT_VELOCITY = "velocity"
 const val DATA_PLAYER_AIM = "playerAim"
 
@@ -41,9 +36,6 @@ class ConnectionControlListeners(
         onPlayerCreated()
         onNewPlayerConnected()
         onPlayerDisconnected()
-//        onPlayerMovement()
-//        onPlayerShooting()
-
 
         onWorldUpdated()
     }
@@ -116,38 +108,6 @@ class ConnectionControlListeners(
             } catch (e: JSONException) {
                 e.printStackTrace()
                 connectionControlEvents.logCallback("PLAYER_DISCONNECTED Error!")
-            }
-        }
-    }
-
-    private fun onPlayerMovement() = with(socket) {
-        on(ON_PLAYER_MOVEMENT) { args ->
-            val data = args[0] as JSONObject
-
-            try {
-                val playerMovementResult = data.getJSONObject(DATA_PLAYER_MOVEMENT_RESULT)
-
-                connectionControlEvents.logCallback("ON_PLAYER_MOVED Player Movement Result: $playerMovementResult")
-                connectionControlEvents.playerMovementWrapResult(playerMovementResult.mapToPlayerMovementResult())
-            } catch (e: JSONException) {
-                e.printStackTrace()
-                connectionControlEvents.logCallback("ON_PLAYER_MOVED Error")
-            }
-        }
-    }
-
-    private fun onPlayerShooting() = with(socket) {
-        on(ON_PLAYER_SHOOTING) { args ->
-            val data = args[0] as JSONObject
-
-            try {
-                val result = data.getJSONObject(DATA_RESULT)
-
-                connectionControlEvents.logCallback("ON_PLAYER_SHOOTING Shooting result: $result")
-                connectionControlEvents.onPlayerEnemyShooting(result.mapToPlayerShootingResponseWrap())
-            } catch (e: JSONException) {
-                e.printStackTrace()
-                connectionControlEvents.logCallback("ON_PLAYER_MOVED Error")
             }
         }
     }

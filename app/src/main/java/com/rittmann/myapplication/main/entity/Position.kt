@@ -1,7 +1,6 @@
 package com.rittmann.myapplication.main.entity
 
 import com.google.gson.annotations.SerializedName
-import com.rittmann.myapplication.main.match.screen.MatchActivity
 import com.rittmann.myapplication.main.utils.Logger
 import kotlin.math.PI
 import kotlin.math.abs
@@ -72,7 +71,7 @@ data class Position(
     }
 
     fun length(): Double {
-        return sqrt((x * x) + (y * y));
+        return sqrt((x * x) + (y * y))
     }
 
     fun direction(): Double {
@@ -80,7 +79,7 @@ data class Position(
     }
 
     fun angle(): Double {
-        return atan2(y, x);
+        return atan2(y, x)
     }
 
 //    Vector2 Vector2::limit_length(const real_t p_len) const {

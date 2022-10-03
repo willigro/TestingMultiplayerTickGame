@@ -4,10 +4,8 @@ import android.graphics.Canvas
 import android.view.MotionEvent
 import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.Position
-import com.rittmann.myapplication.main.entity.server.PlayerMovementWrapResult
-import com.rittmann.myapplication.main.entity.server.PlayerShootingResponseWrap
+import com.rittmann.myapplication.main.entity.server.WorldState
 import com.rittmann.myapplication.main.match.MatchEvents
-import com.rittmann.myapplication.main.server.WorldState
 
 class SceneManager(
     private val matchEvents: MatchEvents,
@@ -53,14 +51,6 @@ class SceneManager(
 
     fun getPlayerPosition(): Position {
         return scene.getPlayerPosition()
-    }
-
-    fun playerMovement(playerMovementWrapResult: PlayerMovementWrapResult) {
-        scene.playerMovement(playerMovementWrapResult)
-    }
-
-    fun onPlayerEnemyShooting(shootingResponseWrap: PlayerShootingResponseWrap) {
-        scene.onPlayerEnemyShooting(shootingResponseWrap)
     }
 
     fun onPlayerUpdate(worldState: WorldState) {

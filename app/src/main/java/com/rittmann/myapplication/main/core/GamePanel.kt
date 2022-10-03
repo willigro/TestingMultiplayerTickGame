@@ -9,11 +9,9 @@ import android.view.SurfaceView
 import com.rittmann.myapplication.main.draw.DrawObject
 import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.Position
-import com.rittmann.myapplication.main.entity.server.PlayerMovementWrapResult
-import com.rittmann.myapplication.main.entity.server.PlayerShootingResponseWrap
 import com.rittmann.myapplication.main.match.MatchEvents
 import com.rittmann.myapplication.main.scene.SceneManager
-import com.rittmann.myapplication.main.server.WorldState
+import com.rittmann.myapplication.main.entity.server.WorldState
 
 class GamePanel(
     context: Context,
@@ -86,16 +84,8 @@ class GamePanel(
         return sceneManager.getPlayerPosition()
     }
 
-    fun playerMovement(playerMovementWrapResult: PlayerMovementWrapResult) {
-        sceneManager.playerMovement(playerMovementWrapResult)
-    }
-
     fun playerDisconnected(id: String) {
         sceneManager.playerDisconnected(id)
-    }
-
-    fun onPlayerEnemyShooting(shootingResponseWrap: PlayerShootingResponseWrap) {
-        sceneManager.onPlayerEnemyShooting(shootingResponseWrap)
     }
 
     fun onPlayerUpdate(worldState: WorldState) {

@@ -10,11 +10,9 @@ import com.rittmann.myapplication.main.entity.Bullet
 import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.Position
 import com.rittmann.myapplication.main.entity.collisor.GlobalCollisions
-import com.rittmann.myapplication.main.entity.server.PlayerMovementWrapResult
-import com.rittmann.myapplication.main.entity.server.PlayerShootingResponseWrap
+import com.rittmann.myapplication.main.entity.server.WorldState
 import com.rittmann.myapplication.main.match.MatchEvents
 import com.rittmann.myapplication.main.match.screen.GLOBAL_TAG
-import com.rittmann.myapplication.main.server.WorldState
 import com.rittmann.myapplication.main.utils.INVALID_ID
 import com.rittmann.myapplication.main.utils.Logger
 
@@ -47,7 +45,7 @@ class SceneMain(
                 if (joystickAim.strength > 80f) {
                     player.shot()?.also { bullet ->
                         _bulletTest.add(bullet)
-                        matchEvents.shoot(player, bullet)
+                        matchEvents.shoot(bullet)
                     }
                 }
             }
@@ -106,20 +104,6 @@ class SceneMain(
 
     override fun getPlayerPosition(): Position {
         return player?.position ?: Position()
-    }
-
-    override fun playerMovement(playerMovementWrapResult: PlayerMovementWrapResult) {
-        val movedEnemy = enemies.firstOrNull { it.playerId == playerMovementWrapResult.id }
-
-        movedEnemy?.keepTheNextPlayerMovement(playerMovementWrapResult)
-    }
-
-    override fun onPlayerEnemyShooting(shootingResponseWrap: PlayerShootingResponseWrap) {
-        val enemyShooting = enemies.firstOrNull { it.playerId == shootingResponseWrap.playerId }
-
-        enemyShooting?.shot(shootingResponseWrap)?.also { bullet ->
-            _bulletTest.add(bullet)
-        }
     }
 
     // Improve it later

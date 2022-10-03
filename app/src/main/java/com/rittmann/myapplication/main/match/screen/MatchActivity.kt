@@ -13,12 +13,10 @@ import com.rittmann.myapplication.main.entity.Bullet
 import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.server.PlayerAimEmit
 import com.rittmann.myapplication.main.entity.server.PlayerMovementEmit
-import com.rittmann.myapplication.main.entity.server.PlayerMovementWrapResult
-import com.rittmann.myapplication.main.entity.server.PlayerShootingResponseWrap
+import com.rittmann.myapplication.main.entity.server.WorldState
 import com.rittmann.myapplication.main.match.MatchEvents
 import com.rittmann.myapplication.main.server.ConnectionControl
 import com.rittmann.myapplication.main.server.ConnectionControlEvents
-import com.rittmann.myapplication.main.server.WorldState
 import com.rittmann.myapplication.main.utils.Logger
 
 const val GLOBAL_TAG = "TAGGING"
@@ -119,24 +117,16 @@ class MatchActivity : AppCompatActivity(), ConnectionControlEvents, MatchEvents,
         gamePanel?.newPlayerConnected(player)
     }
 
-    override fun playerMovementWrapResult(playerMovementWrapResult: PlayerMovementWrapResult) {
-        gamePanel?.playerMovement(playerMovementWrapResult)
-    }
-
     override fun playerDisconnected(id: String) {
         gamePanel?.playerDisconnected(id)
-    }
-
-    override fun onPlayerEnemyShooting(shootingResponseWrap: PlayerShootingResponseWrap) {
-        gamePanel?.onPlayerEnemyShooting(shootingResponseWrap)
     }
 
     override fun onPlayerUpdate(worldState: WorldState) {
         gamePanel?.onPlayerUpdate(worldState)
     }
 
-    override fun shoot(player: Player, bullet: Bullet) {
-        matchController.shoot(player, bullet)
+    override fun shoot(bullet: Bullet) {
+        matchController.shoot(bullet)
     }
 
     override fun update() {

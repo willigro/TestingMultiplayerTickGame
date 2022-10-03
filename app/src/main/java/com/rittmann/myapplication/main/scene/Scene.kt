@@ -4,11 +4,9 @@ import android.graphics.Canvas
 import android.view.MotionEvent
 import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.Position
-import com.rittmann.myapplication.main.entity.server.PlayerMovementWrapResult
-import com.rittmann.myapplication.main.entity.server.PlayerShootingResponseWrap
-import com.rittmann.myapplication.main.server.PlayerUpdate
-import com.rittmann.myapplication.main.server.WorldState
+import com.rittmann.myapplication.main.entity.server.WorldState
 
+// TODO organize by server and interface
 interface Scene {
     fun update()
     fun draw(canvas: Canvas)
@@ -20,7 +18,5 @@ interface Scene {
     fun onJoystickMovementChanged(angle: Double, strength: Double)
     fun onJoystickAimChanged(angle: Double, strength: Double)
     fun getPlayerPosition(): Position
-    fun playerMovement(playerMovementWrapResult: PlayerMovementWrapResult)
-    fun onPlayerEnemyShooting(shootingResponseWrap: PlayerShootingResponseWrap)
     fun onPlayerUpdate(worldState: WorldState)
 }

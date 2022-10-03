@@ -10,7 +10,6 @@ class ConnectionControl(
 ) : Logger {
 
     companion object {
-        const val EMIT_PLAYER_MOVEMENT = "player movement"
         const val EMIT_PLAYER_SHOOTING = "player shooting"
         const val EMIT_PLAYER_UPDATE = "player update"
     }

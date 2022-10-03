@@ -7,16 +7,12 @@ import com.rittmann.myapplication.main.draw.DrawObject
 import com.rittmann.myapplication.main.entity.body.Body
 import com.rittmann.myapplication.main.entity.collisor.Collidable
 import com.rittmann.myapplication.main.entity.collisor.Collider
-import com.rittmann.myapplication.main.entity.server.PlayerAimResult
-import com.rittmann.myapplication.main.entity.server.PlayerMovementResult
-import com.rittmann.myapplication.main.entity.server.PlayerMovementWrapResult
-import com.rittmann.myapplication.main.entity.server.PlayerShootingResponseWrap
 import com.rittmann.myapplication.main.extensions.orZero
-import com.rittmann.myapplication.main.server.PlayerAim
-import com.rittmann.myapplication.main.server.PlayerMovement
-import com.rittmann.myapplication.main.server.PlayerServer
-import com.rittmann.myapplication.main.server.wasAimApplied
-import com.rittmann.myapplication.main.server.wasPositionMovementApplied
+import com.rittmann.myapplication.main.entity.server.PlayerAim
+import com.rittmann.myapplication.main.entity.server.PlayerMovement
+import com.rittmann.myapplication.main.entity.server.PlayerServer
+import com.rittmann.myapplication.main.entity.server.wasAimApplied
+import com.rittmann.myapplication.main.entity.server.wasPositionMovementApplied
 import com.rittmann.myapplication.main.utils.Logger
 
 const val BODY_WIDTH = 40
@@ -40,17 +36,16 @@ data class Player(
     /*
     * Player is moving
     * */
-    var isMoving: Boolean = false
+    private var isMoving: Boolean = false
 
     /*
     * Player is aiming (moving the aim joystick)
     * */
-    var isAiming: Boolean = false
+    private var isAiming: Boolean = false
 
     /*
     * Keep the player movement and aim data got from the server
     * */
-    private var playerMovementResult: PlayerMovementWrapResult? = null
     private var playerServer: PlayerServer? = null
 
     private val paint = Paint()
@@ -76,15 +71,6 @@ data class Player(
 
     private fun updatePlayerAim() {
         if (isAiming) {
-            // New position received but it was not updated yet
-//            if (playerMovementResult.wasAimApplied()) {
-//                // force position
-//                aim(playerMovementResult?.playerAimResult)
-//            } else {
-//                // keep moving util a new position is received
-//                aimUsingKeptPlayerMovement()
-//            }
-
             if (playerServer.wasAimApplied()) {
                 // force position
                 aim(playerServer?.playerAim)
@@ -97,15 +83,6 @@ data class Player(
 
     private fun updatePlayerMovement() {
         if (isMoving) {
-//            // New position received but it was not updated yet
-//            if (playerMovementResult.wasPositionApplied()) {
-//                // force position
-//                setPosition(playerMovementResult?.playerMovementResult)
-//            } else {
-//                // keep moving util a new position is received
-//                moveUsingKeptPlayerMovement()
-//            }
-
             // New position received but it was not updated yet
             if (playerServer.wasPositionMovementApplied()) {
                 // force position
@@ -150,16 +127,6 @@ data class Player(
         }
     }
 
-    fun keepTheNextPlayerMovement(playerMovementWrapResult: PlayerMovementWrapResult?) {
-        // when the angle is bigger than zero it will mean that the joystick (or some movement)
-        // was applied to the player
-        this.isMoving = playerMovementWrapResult?.playerMovementResult?.angle.orZero() > 0.0
-        this.isAiming = playerMovementWrapResult?.playerAimResult?.angle.orZero() > 0.0
-
-        // keep the playerMovement
-        this.playerMovementResult = playerMovementWrapResult
-    }
-
     fun keepTheNextPlayerMovement(playerServer: PlayerServer) {
         // when the angle is bigger than zero it will mean that the joystick (or some movement)
         // was applied to the player
@@ -183,22 +150,6 @@ data class Player(
         mainGunPointer.moveAndRotate(x, y)
     }
 
-    private fun moveUsingKeptPlayerMovementResult() {
-        playerMovementResult?.playerMovementResult?.also { playerMovement ->
-            val normalizedPosition = Position.calculateNormalizedPosition(
-                playerMovement.angle.orZero(),
-                playerMovement.strength.orZero()
-            )
-
-            val x = normalizedPosition.x * playerMovement.velocity
-            val y = normalizedPosition.y * playerMovement.velocity
-
-            this.position.sum(x, y)
-
-            mainGunPointer.moveAndRotate(x, y)
-        }
-    }
-
     private fun moveUsingKeptPlayerMovement() {
         playerServer?.playerMovement?.also { playerMovement ->
             val normalizedPosition = Position.calculateNormalizedPosition(
@@ -215,14 +166,6 @@ data class Player(
         }
     }
 
-    private fun setPosition(playerMovementResult: PlayerMovementResult?) {
-        playerMovementResult?.newPosition?.also {
-            position.set(it.x, it.y)
-
-            mainGunPointer.moveAndRotate(it.x, it.y)
-        }
-    }
-
     private fun setPosition(playerMovement: PlayerMovement?) {
         playerMovement?.position?.also {
             position.set(it.x, it.y)
@@ -232,7 +175,7 @@ data class Player(
     }
 
     private fun aimUsingKeptPlayerMovement() {
-        playerMovementResult?.playerAimResult?.also { playerAim ->
+        playerServer?.playerAim?.also { playerAim ->
             aim(playerAim.angle)
         }
     }
@@ -243,19 +186,13 @@ data class Player(
         mainGunPointer.setRotation(angle)
     }
 
-    private fun aim(playerAimResult: PlayerAimResult?) {
-        playerAimResult?.angle?.also {
-            aim(it)
-        }
-    }
-
     private fun aim(playerAim: PlayerAim?) {
         playerAim?.angle?.also {
             aim(it)
         }
     }
 
-    var lastTime = 0L
+    private var lastTime = 0L
     fun shot(): Bullet? {
         val currentTime = System.currentTimeMillis()
 
@@ -278,18 +215,6 @@ data class Player(
             velocity = BULLET_DEFAULT_VELOCITY,
             maxDistance = BULLET_DEFAULT_MAX_DISTANCE,
         )
-
-        bullet.retrieveCollider().enable()
-        return bullet
-    }
-
-    fun shot(shootingResponseWrap: PlayerShootingResponseWrap): Bullet? {
-        val currentTime = System.currentTimeMillis()
-
-        if (lastTime > 0L && currentTime - lastTime < 500) return null
-        lastTime = System.currentTimeMillis()
-
-        val bullet = shootingResponseWrap.bullet
 
         bullet.retrieveCollider().enable()
         return bullet

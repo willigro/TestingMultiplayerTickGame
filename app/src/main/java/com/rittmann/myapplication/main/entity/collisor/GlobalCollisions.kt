@@ -1,7 +1,7 @@
 package com.rittmann.myapplication.main.entity.collisor
 
 object GlobalCollisions {
-    val collidables: ArrayList<Collidable> = arrayListOf()
+    private val collidables: ArrayList<Collidable> = arrayListOf()
 
     fun add(collidable: Collidable) {
         collidables.add(collidable)
@@ -12,6 +12,6 @@ object GlobalCollisions {
     }
 
     fun verifyCollisions() {
-        // collidables.verifyCollisions()
+        collidables.verifyCollisions()
     }
 }
