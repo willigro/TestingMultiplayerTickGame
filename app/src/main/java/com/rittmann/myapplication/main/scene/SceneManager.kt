@@ -7,9 +7,10 @@ import com.rittmann.myapplication.main.entity.Position
 import com.rittmann.myapplication.main.entity.server.PlayerMovementWrapResult
 import com.rittmann.myapplication.main.entity.server.PlayerShootingResponseWrap
 import com.rittmann.myapplication.main.match.MatchEvents
+import com.rittmann.myapplication.main.server.PlayerUpdate
 
 class SceneManager(
-    matchEvents: MatchEvents,
+    private val matchEvents: MatchEvents,
 ) {
     private val scene: Scene
 
@@ -22,6 +23,7 @@ class SceneManager(
     }
 
     fun update() {
+        matchEvents.update()
         scene.update()
     }
 
@@ -59,5 +61,9 @@ class SceneManager(
 
     fun onPlayerEnemyShooting(shootingResponseWrap: PlayerShootingResponseWrap) {
         scene.onPlayerEnemyShooting(shootingResponseWrap)
+    }
+
+    fun onPlayerUpdate(playerUpdate: PlayerUpdate) {
+        scene.onPlayerUpdate(playerUpdate)
     }
 }

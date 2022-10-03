@@ -14,6 +14,9 @@ import com.rittmann.myapplication.main.entity.server.PlayerShootingResponseWrap
 import com.rittmann.myapplication.main.entity.server.wasAimApplied
 import com.rittmann.myapplication.main.entity.server.wasPositionApplied
 import com.rittmann.myapplication.main.extensions.orZero
+import com.rittmann.myapplication.main.server.PlayerMovement
+import com.rittmann.myapplication.main.server.PlayerServer
+import com.rittmann.myapplication.main.server.wasPositionAppliedExt
 import com.rittmann.myapplication.main.utils.Logger
 
 const val BODY_WIDTH = 40
@@ -49,6 +52,7 @@ data class Player(
     * Keep the player movement and aim data got from the server
     * */
     private var playerMovementResult: PlayerMovementWrapResult? = null
+    private var playerMovement: PlayerMovement? = null
 
     private val paint = Paint()
 
@@ -102,10 +106,19 @@ data class Player(
 
     private fun updatePlayerMovement() {
         if (isMoving) {
+//            // New position received but it was not updated yet
+//            if (playerMovementResult.wasPositionApplied()) {
+//                // force position
+//                setPosition(playerMovementResult?.playerMovementResult)
+//            } else {
+//                // keep moving util a new position is received
+//                moveUsingKeptPlayerMovement()
+//            }
+
             // New position received but it was not updated yet
-            if (playerMovementResult.wasPositionApplied()) {
+            if (playerMovement.wasPositionAppliedExt()) {
                 // force position
-                setPosition(playerMovementResult?.playerMovementResult)
+                setPosition(playerMovement)
             } else {
                 // keep moving util a new position is received
                 moveUsingKeptPlayerMovement()
@@ -158,7 +171,18 @@ data class Player(
         this.playerMovementResult = playerMovementWrapResult
     }
 
+    fun keepTheNextPlayerMovement(playerMovement: PlayerMovement) {
+        // when the angle is bigger than zero it will mean that the joystick (or some movement)
+        // was applied to the player
+        this.isMoving = playerMovement.angle > 0.0
+
+        // keep the playerMovement
+        this.playerMovement = playerMovement
+    }
+
     fun move(angle: Double, strength: Double) {
+        playerMovement?.resetPositionWasApplied()
+
         val normalizedPosition = Position.calculateNormalizedPosition(angle, strength)
 
         val x = normalizedPosition.x * VELOCITY
@@ -169,8 +193,24 @@ data class Player(
         mainGunPointer.moveAndRotate(x, y)
     }
 
-    private fun moveUsingKeptPlayerMovement() {
+    private fun moveUsingKeptPlayerMovementResult() {
         playerMovementResult?.playerMovementResult?.also { playerMovement ->
+            val normalizedPosition = Position.calculateNormalizedPosition(
+                playerMovement.angle.orZero(),
+                playerMovement.strength.orZero()
+            )
+
+            val x = normalizedPosition.x * playerMovement.velocity
+            val y = normalizedPosition.y * playerMovement.velocity
+
+            this.position.sum(x, y)
+
+            mainGunPointer.moveAndRotate(x, y)
+        }
+    }
+
+    private fun moveUsingKeptPlayerMovement() {
+        playerMovement?.also { playerMovement ->
             val normalizedPosition = Position.calculateNormalizedPosition(
                 playerMovement.angle.orZero(),
                 playerMovement.strength.orZero()
@@ -187,6 +227,14 @@ data class Player(
 
     private fun setPosition(playerMovementResult: PlayerMovementResult?) {
         playerMovementResult?.newPosition?.also {
+            position.set(it.x, it.y)
+
+            mainGunPointer.moveAndRotate(it.x, it.y)
+        }
+    }
+
+    private fun setPosition(playerMovement: PlayerMovement?) {
+        playerMovement?.position?.also {
             position.set(it.x, it.y)
 
             mainGunPointer.moveAndRotate(it.x, it.y)

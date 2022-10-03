@@ -1,5 +1,6 @@
 package com.rittmann.myapplication.main.entity
 
+import com.google.gson.annotations.SerializedName
 import com.rittmann.myapplication.main.match.screen.MatchActivity
 import com.rittmann.myapplication.main.utils.Logger
 import kotlin.math.PI
@@ -13,7 +14,9 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 data class Position(
+    @SerializedName("x")
     var x: Double = 0.0,
+    @SerializedName("y")
     var y: Double = 0.0,
 ) : Logger {
 

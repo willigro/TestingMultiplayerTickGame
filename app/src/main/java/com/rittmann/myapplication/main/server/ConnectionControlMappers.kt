@@ -7,6 +7,8 @@ import com.rittmann.myapplication.main.entity.server.PlayerAimResult
 import com.rittmann.myapplication.main.entity.server.PlayerMovementResult
 import com.rittmann.myapplication.main.entity.server.PlayerMovementWrapResult
 import com.rittmann.myapplication.main.entity.server.PlayerShootingResponseWrap
+import java.util.concurrent.atomic.AtomicBoolean
+import org.json.JSONArray
 import org.json.JSONObject
 
 fun JSONObject.mapToPlayerMovementResult(): PlayerMovementWrapResult {
@@ -40,8 +42,10 @@ fun JSONObject.mapToPlayerMovementResult(): PlayerMovementWrapResult {
 }
 
 fun JSONObject.mapToPlayer(): Player {
-    val positionJson = this.getJSONObject(DATA_PLAYER_POSITION)
-    val player = Player(
+    val playerMovementJson = this.getJSONObject(DATA_PLAYER_MOVEMENT)
+    val positionJson = playerMovementJson.getJSONObject(DATA_PLAYER_POSITION)
+
+    return Player(
         playerId = this.getString(DATA_PLAYER_ID),
         position = Position(
             x = positionJson.getDouble(DATA_PLAYER_POSITION_X),
@@ -49,8 +53,6 @@ fun JSONObject.mapToPlayer(): Player {
         ),
         color = this.getString(DATA_PLAYER_COLOR),
     )
-
-    return player
 }
 
 fun JSONObject.mapToPlayerShootingResponseWrap(): PlayerShootingResponseWrap {
@@ -68,4 +70,65 @@ fun JSONObject.mapToPlayerShootingResponseWrap(): PlayerShootingResponseWrap {
         this.getString(DATA_PLAYER_ID),
         bullet,
     )
+}
+
+
+fun JSONArray.mapToPlayerUpdate(): PlayerUpdate {
+    val list = arrayListOf<PlayerServer>()
+
+    for (i in 0 until this.length()) {
+        val json = this.getJSONObject(i)
+        val playerMovementResultJson = json.getJSONObject(DATA_PLAYER_MOVEMENT)
+
+        val positionJson = playerMovementResultJson.getJSONObject(DATA_PLAYER_POSITION)
+
+        list.add(
+            PlayerServer(
+                id = json.getString(DATA_PLAYER_ID),
+                PlayerMovement(
+                    position = Position(
+                        x = positionJson.getDouble(DATA_PLAYER_POSITION_X),
+                        y = positionJson.getDouble(DATA_PLAYER_POSITION_Y),
+                    ),
+                    angle = playerMovementResultJson.getDouble(DATA_PLAYER_MOVEMENT_ANGLE),
+                    strength = playerMovementResultJson.getDouble(DATA_PLAYER_MOVEMENT_STRENGTH),
+                    velocity = playerMovementResultJson.getDouble(DATA_PLAYER_MOVEMENT_VELOCITY),
+                ),
+            )
+        )
+    }
+
+    return PlayerUpdate(
+        players = list
+    )
+}
+
+class PlayerUpdate(
+    val players: List<PlayerServer>
+)
+
+class PlayerServer(
+    val id: String,
+    val playerMovement: PlayerMovement,
+)
+
+data class PlayerMovement(
+    val position: Position,
+    val angle: Double,
+    val strength: Double,
+    val velocity: Double,
+) {
+    fun wasPositionApplied(): Boolean {
+        return newPositionWasApplied.compareAndSet(false, true)
+    }
+
+    fun resetPositionWasApplied() {
+        newPositionWasApplied.set(false)
+    }
+
+    private val newPositionWasApplied = AtomicBoolean(false)
+}
+
+fun PlayerMovement?.wasPositionAppliedExt(): Boolean {
+    return this?.wasPositionApplied() == true
 }

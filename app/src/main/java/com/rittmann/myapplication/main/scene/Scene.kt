@@ -6,6 +6,7 @@ import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.Position
 import com.rittmann.myapplication.main.entity.server.PlayerMovementWrapResult
 import com.rittmann.myapplication.main.entity.server.PlayerShootingResponseWrap
+import com.rittmann.myapplication.main.server.PlayerUpdate
 
 interface Scene {
     fun update()
@@ -20,4 +21,5 @@ interface Scene {
     fun getPlayerPosition(): Position
     fun playerMovement(playerMovementWrapResult: PlayerMovementWrapResult)
     fun onPlayerEnemyShooting(shootingResponseWrap: PlayerShootingResponseWrap)
+    fun onPlayerUpdate(playerUpdate: PlayerUpdate)
 }

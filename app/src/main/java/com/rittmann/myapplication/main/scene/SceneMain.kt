@@ -7,10 +7,12 @@ import com.rittmann.myapplication.main.components.Joystick
 import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.Position
 import com.rittmann.myapplication.main.entity.collisor.GlobalCollisions
+import com.rittmann.myapplication.main.entity.server.PlayerMovementResult
 import com.rittmann.myapplication.main.entity.server.PlayerMovementWrapResult
 import com.rittmann.myapplication.main.entity.server.PlayerShootingResponseWrap
 import com.rittmann.myapplication.main.match.MatchEvents
 import com.rittmann.myapplication.main.match.screen.GLOBAL_TAG
+import com.rittmann.myapplication.main.server.PlayerUpdate
 import com.rittmann.myapplication.main.utils.INVALID_ID
 import com.rittmann.myapplication.main.utils.Logger
 
@@ -69,11 +71,13 @@ class SceneMain(
     }
 
     override fun ownPlayerCreated(player: Player) {
+        "ownPlayerCreated".log()
         player.retrieveCollider().enable()
         this.player = player
     }
 
     override fun newPlayerConnected(player: Player) {
+        "newPlayerConnected".log()
         player.retrieveCollider().enable()
         enemies.add(player)
     }
@@ -108,6 +112,18 @@ class SceneMain(
         val enemyShooting = enemies.firstOrNull { it.playerId == shootingResponseWrap.playerId }
 
         enemyShooting?.shot(shootingResponseWrap)
+    }
+
+    override fun onPlayerUpdate(playerUpdate: PlayerUpdate) {
+        playerUpdate.players.forEach { playerServer ->
+            if (playerServer.id == player?.playerId) {
+                player?.keepTheNextPlayerMovement(playerServer.playerMovement)
+            } else {
+                val enemy = enemies.firstOrNull { it.playerId == playerServer.id }
+
+                enemy?.keepTheNextPlayerMovement(playerServer.playerMovement)
+            }
+        }
     }
 
     init {

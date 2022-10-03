@@ -12,6 +12,6 @@ object GlobalCollisions {
     }
 
     fun verifyCollisions() {
-        collidables.verifyCollisions()
+        // collidables.verifyCollisions()
     }
 }

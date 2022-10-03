@@ -18,6 +18,7 @@ import com.rittmann.myapplication.main.entity.server.PlayerShootingResponseWrap
 import com.rittmann.myapplication.main.match.MatchEvents
 import com.rittmann.myapplication.main.server.ConnectionControl
 import com.rittmann.myapplication.main.server.ConnectionControlEvents
+import com.rittmann.myapplication.main.server.PlayerUpdate
 import com.rittmann.myapplication.main.utils.Logger
 
 const val GLOBAL_TAG = "TAGGING"
@@ -78,36 +79,13 @@ class MatchActivity : AppCompatActivity(), ConnectionControlEvents, MatchEvents,
         joystickLeft.setOnMoveListener { angle, strength ->
             gamePanel?.apply {
                 onJoystickMovementChanged(angle, strength)
-                sendPlayerMovement()
             }
         }
 
         joystickRight.setOnMoveListener { angle, strength ->
             gamePanel?.apply {
                 onJoystickAimChanged(angle, strength)
-                sendPlayerMovement()
             }
-        }
-    }
-
-    private fun sendPlayerMovement() {
-        gamePanel?.apply {
-            val playerPosition = getPlayerPosition()
-
-            matchController.sendPlayerPosition(
-                playerMovementEmit = PlayerMovementEmit(
-                    x = playerPosition.x,
-                    y = playerPosition.y,
-                    angle = joystickLeft.angle,
-                    strength = joystickLeft.strength,
-                    velocity = Player.VELOCITY,
-                ),
-
-                playerAimEmit = PlayerAimEmit(
-                    angle = joystickRight.angle,
-                    strength = joystickRight.strength,
-                )
-            )
         }
     }
 
@@ -153,7 +131,31 @@ class MatchActivity : AppCompatActivity(), ConnectionControlEvents, MatchEvents,
         gamePanel?.onPlayerEnemyShooting(shootingResponseWrap)
     }
 
+    override fun onPlayerUpdate(playerUpdate: PlayerUpdate) {
+        gamePanel?.onPlayerUpdate(playerUpdate)
+    }
+
     override fun shoot(player: Player, bullet: Bullet) {
         matchController.shoot(player, bullet)
+    }
+
+    override fun update() {
+        gamePanel?.apply {
+            val playerPosition = getPlayerPosition()
+
+            matchController.update(
+                playerMovementEmit = PlayerMovementEmit(
+                    position = playerPosition,
+                    angle = joystickLeft.angle,
+                    strength = joystickLeft.strength,
+                    velocity = Player.VELOCITY,
+                ),
+
+                playerAimEmit = PlayerAimEmit(
+                    angle = joystickRight.angle,
+                    strength = joystickRight.strength,
+                )
+            )
+        }
     }
 }

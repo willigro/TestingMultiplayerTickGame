@@ -41,6 +41,12 @@ class Pointer(
         rotate()
     }
 
+    fun moveAndRotate(position: Position) {
+        position.sum(position.x, position.y)
+
+        rotate()
+    }
+
     private fun rotate() {
         val normalizedPosition = Position.calculateNormalizedPosition(
             rotationAngle

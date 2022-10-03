@@ -13,6 +13,7 @@ import com.rittmann.myapplication.main.entity.server.PlayerMovementWrapResult
 import com.rittmann.myapplication.main.entity.server.PlayerShootingResponseWrap
 import com.rittmann.myapplication.main.match.MatchEvents
 import com.rittmann.myapplication.main.scene.SceneManager
+import com.rittmann.myapplication.main.server.PlayerUpdate
 
 class GamePanel(
     context: Context,
@@ -95,5 +96,9 @@ class GamePanel(
 
     fun onPlayerEnemyShooting(shootingResponseWrap: PlayerShootingResponseWrap) {
         sceneManager.onPlayerEnemyShooting(shootingResponseWrap)
+    }
+
+    fun onPlayerUpdate(playerUpdate: PlayerUpdate) {
+        sceneManager.onPlayerUpdate(playerUpdate)
     }
 }

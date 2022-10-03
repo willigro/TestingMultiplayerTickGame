@@ -5,4 +5,5 @@ import com.rittmann.myapplication.main.entity.Player
 
 interface MatchEvents {
     fun shoot(player: Player, bullet: Bullet)
+    fun update()
 }
