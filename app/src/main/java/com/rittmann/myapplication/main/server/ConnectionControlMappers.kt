@@ -79,13 +79,14 @@ fun JSONArray.mapToPlayerUpdate(): PlayerUpdate {
     for (i in 0 until this.length()) {
         val json = this.getJSONObject(i)
         val playerMovementResultJson = json.getJSONObject(DATA_PLAYER_MOVEMENT)
+        val playerAimResultJson = json.getJSONObject(DATA_PLAYER_AIM)
 
         val positionJson = playerMovementResultJson.getJSONObject(DATA_PLAYER_POSITION)
 
         list.add(
             PlayerServer(
                 id = json.getString(DATA_PLAYER_ID),
-                PlayerMovement(
+                playerMovement = PlayerMovement(
                     position = Position(
                         x = positionJson.getDouble(DATA_PLAYER_POSITION_X),
                         y = positionJson.getDouble(DATA_PLAYER_POSITION_Y),
@@ -94,6 +95,10 @@ fun JSONArray.mapToPlayerUpdate(): PlayerUpdate {
                     strength = playerMovementResultJson.getDouble(DATA_PLAYER_MOVEMENT_STRENGTH),
                     velocity = playerMovementResultJson.getDouble(DATA_PLAYER_MOVEMENT_VELOCITY),
                 ),
+                playerAim = PlayerAim(
+                    angle = playerAimResultJson.getDouble(DATA_PLAYER_MOVEMENT_ANGLE),
+                    strength = playerAimResultJson.getDouble(DATA_PLAYER_MOVEMENT_STRENGTH),
+                )
             )
         )
     }
@@ -110,7 +115,23 @@ class PlayerUpdate(
 class PlayerServer(
     val id: String,
     val playerMovement: PlayerMovement,
+    val playerAim: PlayerAim,
 )
+
+data class PlayerAim(
+    val angle: Double,
+    val strength: Double,
+) {
+    fun wasAimApplied(): Boolean {
+        return newPositionWasApplied.compareAndSet(false, true)
+    }
+
+    fun resetAppliedAim() {
+        newPositionWasApplied.set(false)
+    }
+
+    private val newPositionWasApplied = AtomicBoolean(false)
+}
 
 data class PlayerMovement(
     val position: Position,
@@ -129,6 +150,10 @@ data class PlayerMovement(
     private val newPositionWasApplied = AtomicBoolean(false)
 }
 
-fun PlayerMovement?.wasPositionAppliedExt(): Boolean {
-    return this?.wasPositionApplied() == true
+fun PlayerServer?.wasPositionMovementApplied(): Boolean {
+    return this?.playerMovement?.wasPositionApplied()  == true
+}
+
+fun PlayerServer?.wasAimApplied(): Boolean {
+    return this?.playerAim?.wasAimApplied()  == true
 }

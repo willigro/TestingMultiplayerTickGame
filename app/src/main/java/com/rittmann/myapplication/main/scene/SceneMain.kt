@@ -117,11 +117,11 @@ class SceneMain(
     override fun onPlayerUpdate(playerUpdate: PlayerUpdate) {
         playerUpdate.players.forEach { playerServer ->
             if (playerServer.id == player?.playerId) {
-                player?.keepTheNextPlayerMovement(playerServer.playerMovement)
+                player?.keepTheNextPlayerMovement(playerServer)
             } else {
                 val enemy = enemies.firstOrNull { it.playerId == playerServer.id }
 
-                enemy?.keepTheNextPlayerMovement(playerServer.playerMovement)
+                enemy?.keepTheNextPlayerMovement(playerServer)
             }
         }
     }

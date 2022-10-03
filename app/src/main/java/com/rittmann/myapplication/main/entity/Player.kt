@@ -11,12 +11,12 @@ import com.rittmann.myapplication.main.entity.server.PlayerAimResult
 import com.rittmann.myapplication.main.entity.server.PlayerMovementResult
 import com.rittmann.myapplication.main.entity.server.PlayerMovementWrapResult
 import com.rittmann.myapplication.main.entity.server.PlayerShootingResponseWrap
-import com.rittmann.myapplication.main.entity.server.wasAimApplied
-import com.rittmann.myapplication.main.entity.server.wasPositionApplied
 import com.rittmann.myapplication.main.extensions.orZero
+import com.rittmann.myapplication.main.server.PlayerAim
 import com.rittmann.myapplication.main.server.PlayerMovement
 import com.rittmann.myapplication.main.server.PlayerServer
-import com.rittmann.myapplication.main.server.wasPositionAppliedExt
+import com.rittmann.myapplication.main.server.wasAimApplied
+import com.rittmann.myapplication.main.server.wasPositionMovementApplied
 import com.rittmann.myapplication.main.utils.Logger
 
 const val BODY_WIDTH = 40
@@ -52,7 +52,7 @@ data class Player(
     * Keep the player movement and aim data got from the server
     * */
     private var playerMovementResult: PlayerMovementWrapResult? = null
-    private var playerMovement: PlayerMovement? = null
+    private var playerServer: PlayerServer? = null
 
     private val paint = Paint()
 
@@ -94,9 +94,17 @@ data class Player(
     private fun updatePlayerAim() {
         if (isAiming) {
             // New position received but it was not updated yet
-            if (playerMovementResult.wasAimApplied()) {
+//            if (playerMovementResult.wasAimApplied()) {
+//                // force position
+//                aim(playerMovementResult?.playerAimResult)
+//            } else {
+//                // keep moving util a new position is received
+//                aimUsingKeptPlayerMovement()
+//            }
+
+            if (playerServer.wasAimApplied()) {
                 // force position
-                aim(playerMovementResult?.playerAimResult)
+                aim(playerServer?.playerAim)
             } else {
                 // keep moving util a new position is received
                 aimUsingKeptPlayerMovement()
@@ -116,9 +124,9 @@ data class Player(
 //            }
 
             // New position received but it was not updated yet
-            if (playerMovement.wasPositionAppliedExt()) {
+            if (playerServer.wasPositionMovementApplied()) {
                 // force position
-                setPosition(playerMovement)
+                setPosition(playerServer?.playerMovement)
             } else {
                 // keep moving util a new position is received
                 moveUsingKeptPlayerMovement()
@@ -171,17 +179,18 @@ data class Player(
         this.playerMovementResult = playerMovementWrapResult
     }
 
-    fun keepTheNextPlayerMovement(playerMovement: PlayerMovement) {
+    fun keepTheNextPlayerMovement(playerServer: PlayerServer) {
         // when the angle is bigger than zero it will mean that the joystick (or some movement)
         // was applied to the player
-        this.isMoving = playerMovement.angle > 0.0
+        this.isMoving = playerServer.playerMovement.angle > 0.0
+        this.isAiming = playerServer.playerAim.angle > 0.0
 
         // keep the playerMovement
-        this.playerMovement = playerMovement
+        this.playerServer = playerServer
     }
 
     fun move(angle: Double, strength: Double) {
-        playerMovement?.resetPositionWasApplied()
+        playerServer?.playerMovement?.resetPositionWasApplied()
 
         val normalizedPosition = Position.calculateNormalizedPosition(angle, strength)
 
@@ -210,7 +219,7 @@ data class Player(
     }
 
     private fun moveUsingKeptPlayerMovement() {
-        playerMovement?.also { playerMovement ->
+        playerServer?.playerMovement?.also { playerMovement ->
             val normalizedPosition = Position.calculateNormalizedPosition(
                 playerMovement.angle.orZero(),
                 playerMovement.strength.orZero()
@@ -255,6 +264,12 @@ data class Player(
 
     private fun aim(playerAimResult: PlayerAimResult?) {
         playerAimResult?.angle?.also {
+            aim(it)
+        }
+    }
+
+    private fun aim(playerAim: PlayerAim?) {
+        playerAim?.angle?.also {
             aim(it)
         }
     }
