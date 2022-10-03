@@ -10,7 +10,7 @@ const val ON_PLAYER_CREATED = "player created"
 const val ON_PLAYER_DISCONNECTED = "player disconnected"
 const val ON_PLAYER_MOVEMENT = "players movement"
 const val ON_PLAYER_SHOOTING = "player shooting"
-const val ON_PLAYER_UPDATE = "player update"
+const val ON_WORLD_STATE = "world state"
 
 const val DATA_PLAYER_ID = "id"
 const val DATA_PLAYER_POSITION = "position"
@@ -45,7 +45,7 @@ class ConnectionControlListeners(
 //        onPlayerShooting()
 
 
-        onPlayersUpdate()
+        onWorldUpdated()
     }
 
     private fun onEventConnect() = with(socket) {
@@ -152,14 +152,12 @@ class ConnectionControlListeners(
         }
     }
 
-    private fun onPlayersUpdate() = with(socket) {
-        on(ON_PLAYER_UPDATE) { args ->
+    private fun onWorldUpdated() = with(socket) {
+        on(ON_WORLD_STATE) { args ->
             val data = args[0] as JSONObject
             try {
-                val result = data.getJSONArray("players")
-
 //                connectionControlEvents.logCallback("ON_PLAYER_SHOOTING Shooting result: $result")
-                connectionControlEvents.onPlayerUpdate(result.mapToPlayerUpdate())
+                connectionControlEvents.onPlayerUpdate(data.mapToWorldUpdate())
             } catch (e: JSONException) {
                 e.printStackTrace()
                 connectionControlEvents.logCallback("ON_PLAYER_MOVED Error")

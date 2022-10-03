@@ -41,6 +41,12 @@ class Pointer(
         rotate()
     }
 
+    fun setMoveAndRotate(x: Double, y: Double) {
+        position.set(x, y)
+
+        rotate()
+    }
+
     fun moveAndRotate(position: Position) {
         position.sum(position.x, position.y)
 

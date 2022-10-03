@@ -11,5 +11,5 @@ interface ConnectionControlEvents {
     fun playerMovementWrapResult(playerMovementWrapResult: PlayerMovementWrapResult)
     fun playerDisconnected(id: String)
     fun onPlayerEnemyShooting(shootingResponseWrap: PlayerShootingResponseWrap)
-    fun onPlayerUpdate(playerUpdate: PlayerUpdate)
+    fun onPlayerUpdate(worldState: WorldState)
 }

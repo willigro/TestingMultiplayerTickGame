@@ -18,7 +18,7 @@ import com.rittmann.myapplication.main.entity.server.PlayerShootingResponseWrap
 import com.rittmann.myapplication.main.match.MatchEvents
 import com.rittmann.myapplication.main.server.ConnectionControl
 import com.rittmann.myapplication.main.server.ConnectionControlEvents
-import com.rittmann.myapplication.main.server.PlayerUpdate
+import com.rittmann.myapplication.main.server.WorldState
 import com.rittmann.myapplication.main.utils.Logger
 
 const val GLOBAL_TAG = "TAGGING"
@@ -131,8 +131,8 @@ class MatchActivity : AppCompatActivity(), ConnectionControlEvents, MatchEvents,
         gamePanel?.onPlayerEnemyShooting(shootingResponseWrap)
     }
 
-    override fun onPlayerUpdate(playerUpdate: PlayerUpdate) {
-        gamePanel?.onPlayerUpdate(playerUpdate)
+    override fun onPlayerUpdate(worldState: WorldState) {
+        gamePanel?.onPlayerUpdate(worldState)
     }
 
     override fun shoot(player: Player, bullet: Bullet) {

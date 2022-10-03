@@ -4,15 +4,17 @@ import android.graphics.Canvas
 import android.util.Log
 import android.view.MotionEvent
 import com.rittmann.myapplication.main.components.Joystick
+import com.rittmann.myapplication.main.entity.BULLET_DEFAULT_MAX_DISTANCE
+import com.rittmann.myapplication.main.entity.BULLET_DEFAULT_VELOCITY
+import com.rittmann.myapplication.main.entity.Bullet
 import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.Position
 import com.rittmann.myapplication.main.entity.collisor.GlobalCollisions
-import com.rittmann.myapplication.main.entity.server.PlayerMovementResult
 import com.rittmann.myapplication.main.entity.server.PlayerMovementWrapResult
 import com.rittmann.myapplication.main.entity.server.PlayerShootingResponseWrap
 import com.rittmann.myapplication.main.match.MatchEvents
 import com.rittmann.myapplication.main.match.screen.GLOBAL_TAG
-import com.rittmann.myapplication.main.server.PlayerUpdate
+import com.rittmann.myapplication.main.server.WorldState
 import com.rittmann.myapplication.main.utils.INVALID_ID
 import com.rittmann.myapplication.main.utils.Logger
 
@@ -22,6 +24,7 @@ class SceneMain(
 ) : Scene, Logger {
     private var player: Player? = null
     private var enemies: ArrayList<Player> = arrayListOf()
+    private var _bulletTest: ArrayList<Bullet> = arrayListOf()
 
     private var joystickMovement: Joystick = Joystick()
     private var joystickAim: Joystick = Joystick()
@@ -43,6 +46,7 @@ class SceneMain(
                 // create a const
                 if (joystickAim.strength > 80f) {
                     player.shot()?.also { bullet ->
+                        _bulletTest.add(bullet)
                         matchEvents.shoot(player, bullet)
                     }
                 }
@@ -56,12 +60,14 @@ class SceneMain(
 
             GlobalCollisions.verifyCollisions()
         }
+        updateBullets()
     }
 
     override fun draw(canvas: Canvas) {
 //        canvas.drawColor(StardardColors.INSTANCE.getBackground());
         player?.draw(canvas)
         enemies.forEach { it.draw(canvas) }
+        _bulletTest.forEach { it.draw(canvas) }
     }
 
     override fun terminate() {}
@@ -111,17 +117,66 @@ class SceneMain(
     override fun onPlayerEnemyShooting(shootingResponseWrap: PlayerShootingResponseWrap) {
         val enemyShooting = enemies.firstOrNull { it.playerId == shootingResponseWrap.playerId }
 
-        enemyShooting?.shot(shootingResponseWrap)
+        enemyShooting?.shot(shootingResponseWrap)?.also { bullet ->
+            _bulletTest.add(bullet)
+        }
     }
 
-    override fun onPlayerUpdate(playerUpdate: PlayerUpdate) {
-        playerUpdate.players.forEach { playerServer ->
+    // Improve it later
+    override fun onPlayerUpdate(worldState: WorldState) {
+        worldState.playerUpdate.players.forEach { playerServer ->
             if (playerServer.id == player?.playerId) {
                 player?.keepTheNextPlayerMovement(playerServer)
             } else {
                 val enemy = enemies.firstOrNull { it.playerId == playerServer.id }
 
                 enemy?.keepTheNextPlayerMovement(playerServer)
+            }
+        }
+
+        worldState.bulletUpdate.bullets.forEach { bullet ->
+            var localBullet: Bullet? = null
+            for (i in 0 until _bulletTest.size) {
+                if (_bulletTest[i].bulletId == bullet.bulletId) {
+                    localBullet = _bulletTest[i]
+                    break
+                }
+            }
+
+            if (localBullet == null) {
+                // create a new one
+                _bulletTest.add(
+                    Bullet(
+                        bulletId = bullet.bulletId,
+                        ownerId = bullet.ownerId,
+                        position = Position(
+                            x = bullet.position.x,
+                            y = bullet.position.y
+                        ),
+                        angle = bullet.angle,
+                        velocity = BULLET_DEFAULT_VELOCITY,
+                        maxDistance = BULLET_DEFAULT_MAX_DISTANCE,
+                    )
+                )
+            } else {
+                // update
+                localBullet.updateValues(bullet)
+            }
+        }
+    }
+
+
+    private fun updateBullets() {
+        val bulletIterator = _bulletTest.iterator()
+
+        while (bulletIterator.hasNext()) {
+            val currentBullet = bulletIterator.next()
+
+            if (currentBullet.isFree()) {
+                currentBullet.free()
+                bulletIterator.remove()
+            } else {
+                currentBullet.update()
             }
         }
     }

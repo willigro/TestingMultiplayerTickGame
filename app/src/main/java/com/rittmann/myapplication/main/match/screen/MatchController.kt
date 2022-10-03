@@ -1,8 +1,7 @@
 package com.rittmann.myapplication.main.match.screen
 
 import com.google.gson.Gson
-import com.google.gson.annotations.SerializedName
-import com.rittmann.myapplication.main.entity.BULLET_VELOCITY
+import com.rittmann.myapplication.main.entity.BULLET_DEFAULT_VELOCITY
 import com.rittmann.myapplication.main.entity.Bullet
 import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.server.PlayerAimEmit
@@ -36,10 +35,11 @@ class MatchController(private val connectionControl: ConnectionControl) {
         connectionControl.emit(
             ConnectionControl.EMIT_PLAYER_SHOOTING, Gson().toJson(
                 PlayerShootingEmit(
-                    id = player.playerId,
+                    bulletId = bullet.bulletId,
+                    ownerId = bullet.ownerId,
                     position = bullet.position,
                     angle = bullet.angle,
-                    velocity = BULLET_VELOCITY,
+                    velocity = BULLET_DEFAULT_VELOCITY,
                 )
             )
         )

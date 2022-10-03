@@ -28,7 +28,6 @@ data class Player(
     val color: String = "",
 ) : DrawObject, Collidable, Logger {
 
-    private var _bulletTest: ArrayList<Bullet> = arrayListOf()
     private val body: Body = Body(position.copy(), BODY_WIDTH, BODY_HEIGHT)
     private val mainGunPointer: Pointer = Pointer(
         position.copy(),
@@ -65,26 +64,10 @@ data class Player(
         updatePlayerAim()
         updateBodyPosition()
         updateColliderPosition()
-        updateBullets()
     }
 
     private fun updateColliderPosition() {
         collider.move(position)
-    }
-
-    private fun updateBullets() {
-        val bulletIterator = _bulletTest.iterator()
-
-        while (bulletIterator.hasNext()) {
-            val currentBullet = bulletIterator.next()
-
-            if (currentBullet.isFree()) {
-                currentBullet.free()
-                bulletIterator.remove()
-            } else {
-                currentBullet.update()
-            }
-        }
     }
 
     private fun updateBodyPosition() {
@@ -146,8 +129,6 @@ data class Player(
         canvas.restore()
 
         mainGunPointer.draw(canvas)
-
-        _bulletTest.forEach { it.draw(canvas) }
     }
 
     override fun free() {
@@ -230,7 +211,7 @@ data class Player(
 
             this.position.sum(x, y)
 
-            mainGunPointer.moveAndRotate(x, y)
+            mainGunPointer.setMoveAndRotate(x, y)
         }
     }
 
@@ -246,7 +227,7 @@ data class Player(
         playerMovement?.position?.also {
             position.set(it.x, it.y)
 
-            mainGunPointer.moveAndRotate(it.x, it.y)
+            mainGunPointer.setMoveAndRotate(it.x, it.y)
         }
     }
 
@@ -281,18 +262,24 @@ data class Player(
         if (lastTime > 0L && currentTime - lastTime < 500) return null
         lastTime = System.currentTimeMillis()
 
+        return createBullet()
+    }
+
+    private fun createBullet() : Bullet {
         val pointerPosition = mainGunPointer.getRotatedPosition()
         val bullet = Bullet(
-            bulletId = "",
+            bulletId = "${playerId}_${System.nanoTime()}",
+            ownerId = playerId,
             position = Position(
                 x = pointerPosition.x,
                 y = pointerPosition.y
             ),
             angle = body.rotationAngle,
+            velocity = BULLET_DEFAULT_VELOCITY,
+            maxDistance = BULLET_DEFAULT_MAX_DISTANCE,
         )
 
         bullet.retrieveCollider().enable()
-        _bulletTest.add(bullet)
         return bullet
     }
 
@@ -305,7 +292,6 @@ data class Player(
         val bullet = shootingResponseWrap.bullet
 
         bullet.retrieveCollider().enable()
-        _bulletTest.add(bullet)
         return bullet
     }
 

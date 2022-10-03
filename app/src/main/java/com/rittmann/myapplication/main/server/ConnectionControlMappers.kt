@@ -1,5 +1,7 @@
 package com.rittmann.myapplication.main.server
 
+import com.rittmann.myapplication.main.entity.BULLET_DEFAULT_MAX_DISTANCE
+import com.rittmann.myapplication.main.entity.BULLET_DEFAULT_VELOCITY
 import com.rittmann.myapplication.main.entity.Bullet
 import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.Position
@@ -8,7 +10,6 @@ import com.rittmann.myapplication.main.entity.server.PlayerMovementResult
 import com.rittmann.myapplication.main.entity.server.PlayerMovementWrapResult
 import com.rittmann.myapplication.main.entity.server.PlayerShootingResponseWrap
 import java.util.concurrent.atomic.AtomicBoolean
-import org.json.JSONArray
 import org.json.JSONObject
 
 fun JSONObject.mapToPlayerMovementResult(): PlayerMovementWrapResult {
@@ -59,11 +60,14 @@ fun JSONObject.mapToPlayerShootingResponseWrap(): PlayerShootingResponseWrap {
     val positionJson = this.getJSONObject(DATA_PLAYER_POSITION)
     val bullet = Bullet(
         bulletId = "",
+        ownerId = "",
         position = Position(
             x = positionJson.getDouble(DATA_PLAYER_POSITION_X),
             y = positionJson.getDouble(DATA_PLAYER_POSITION_Y),
         ),
         angle = this.getDouble(DATA_PLAYER_MOVEMENT_ANGLE),
+        velocity = BULLET_DEFAULT_VELOCITY,
+        maxDistance = BULLET_DEFAULT_MAX_DISTANCE,
     )
 
     return PlayerShootingResponseWrap(
@@ -73,19 +77,22 @@ fun JSONObject.mapToPlayerShootingResponseWrap(): PlayerShootingResponseWrap {
 }
 
 
-fun JSONArray.mapToPlayerUpdate(): PlayerUpdate {
-    val list = arrayListOf<PlayerServer>()
+fun JSONObject.mapToWorldUpdate(): WorldState {
 
-    for (i in 0 until this.length()) {
-        val json = this.getJSONObject(i)
-        val playerMovementResultJson = json.getJSONObject(DATA_PLAYER_MOVEMENT)
-        val playerAimResultJson = json.getJSONObject(DATA_PLAYER_AIM)
+    val players = arrayListOf<PlayerServer>()
+    val playerListJson = this.getJSONArray("players")
+
+    for (i in 0 until playerListJson.length()) {
+        val playerJson = playerListJson.getJSONObject(i)
+
+        val playerMovementResultJson = playerJson.getJSONObject(DATA_PLAYER_MOVEMENT)
+        val playerAimResultJson = playerJson.getJSONObject(DATA_PLAYER_AIM)
 
         val positionJson = playerMovementResultJson.getJSONObject(DATA_PLAYER_POSITION)
 
-        list.add(
+        players.add(
             PlayerServer(
-                id = json.getString(DATA_PLAYER_ID),
+                id = playerJson.getString(DATA_PLAYER_ID),
                 playerMovement = PlayerMovement(
                     position = Position(
                         x = positionJson.getDouble(DATA_PLAYER_POSITION_X),
@@ -103,10 +110,44 @@ fun JSONArray.mapToPlayerUpdate(): PlayerUpdate {
         )
     }
 
-    return PlayerUpdate(
-        players = list
+    val bullets = arrayListOf<Bullet>()
+    val bulletListJson = this.getJSONArray("bullets")
+    for (i in 0 until bulletListJson.length()) {
+        val bulletJson = bulletListJson.getJSONObject(i)
+
+        val positionJson = bulletJson.getJSONObject(DATA_PLAYER_POSITION)
+
+        bullets.add(
+            Bullet(
+                bulletId = bulletJson.getString("id"),
+                ownerId = bulletJson.getString("owner"),
+                position = Position(
+                    x = positionJson.getDouble(DATA_PLAYER_POSITION_X),
+                    y = positionJson.getDouble(DATA_PLAYER_POSITION_Y),
+                ),
+                angle = bulletJson.getDouble(DATA_PLAYER_MOVEMENT_ANGLE),
+                maxDistance = bulletJson.getDouble("maxDistance"),
+                velocity = bulletJson.getDouble("velocity"),
+            ).apply {
+                ownerId = bulletJson.getString("owner")
+            }
+        )
+    }
+
+    return WorldState(
+        playerUpdate = PlayerUpdate(players = players),
+        bulletUpdate = BulletUpdate(bullets = bullets),
     )
 }
+
+class WorldState(
+    val playerUpdate: PlayerUpdate,
+    val bulletUpdate: BulletUpdate,
+)
+
+class BulletUpdate(
+    val bullets: List<Bullet>
+)
 
 class PlayerUpdate(
     val players: List<PlayerServer>
@@ -151,9 +192,9 @@ data class PlayerMovement(
 }
 
 fun PlayerServer?.wasPositionMovementApplied(): Boolean {
-    return this?.playerMovement?.wasPositionApplied()  == true
+    return this?.playerMovement?.wasPositionApplied() == true
 }
 
 fun PlayerServer?.wasAimApplied(): Boolean {
-    return this?.playerAim?.wasAimApplied()  == true
+    return this?.playerAim?.wasAimApplied() == true
 }

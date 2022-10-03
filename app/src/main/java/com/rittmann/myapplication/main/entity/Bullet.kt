@@ -10,12 +10,16 @@ import com.rittmann.myapplication.main.entity.collisor.Collider
 import com.rittmann.myapplication.main.utils.Logger
 
 private const val BULLET_SIZE = 15
-const val BULLET_VELOCITY = 10.0
+const val BULLET_DEFAULT_VELOCITY = 10.0
+const val BULLET_DEFAULT_MAX_DISTANCE = 200.0
 
 class Bullet(
     val bulletId: String,
+    var ownerId: String ,
     val position: Position,
-    val angle: Double,
+    var angle: Double,
+    var maxDistance: Double,
+    var velocity: Double,
 ) : DrawObject, Collidable, Logger {
 
     private var initialPosition: Position = position.copy()
@@ -34,8 +38,8 @@ class Bullet(
             angle
         )
 
-        val x = normalizedPosition.x * BULLET_VELOCITY
-        val y = normalizedPosition.y * BULLET_VELOCITY
+        val x = normalizedPosition.x * velocity
+        val y = normalizedPosition.y * velocity
 
         position.sum(x, y)
 
@@ -66,5 +70,13 @@ class Bullet(
         }
     }
 
-    fun isFree(): Boolean = initialPosition.distance(position) >= 200.0
+    fun isFree(): Boolean = initialPosition.distance(position) >= maxDistance
+
+    fun updateValues(bullet: Bullet) {
+        position.set(bullet.position)
+        angle = bullet.angle
+        body.setRotation(angle)
+        maxDistance = bullet.maxDistance
+        velocity = bullet.velocity
+    }
 }
