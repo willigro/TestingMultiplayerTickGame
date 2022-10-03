@@ -94,16 +94,16 @@ class SceneMain(
         }
     }
 
+    override fun getPlayer(): Player? {
+        return player
+    }
+
     override fun onJoystickMovementChanged(angle: Double, strength: Double) {
         joystickMovement.set(angle, strength)
     }
 
     override fun onJoystickAimChanged(angle: Double, strength: Double) {
         joystickAim.set(angle, strength)
-    }
-
-    override fun getPlayerPosition(): Position {
-        return player?.position ?: Position()
     }
 
     // Improve it later

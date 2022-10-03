@@ -8,7 +8,6 @@ import android.view.SurfaceHolder
 import android.view.SurfaceView
 import com.rittmann.myapplication.main.draw.DrawObject
 import com.rittmann.myapplication.main.entity.Player
-import com.rittmann.myapplication.main.entity.Position
 import com.rittmann.myapplication.main.match.MatchEvents
 import com.rittmann.myapplication.main.scene.SceneManager
 import com.rittmann.myapplication.main.entity.server.WorldState
@@ -80,8 +79,8 @@ class GamePanel(
         sceneManager.onJoystickAimChanged(angle, strength)
     }
 
-    fun getPlayerPosition(): Position {
-        return sceneManager.getPlayerPosition()
+    fun getPlayer(): Player? {
+        return sceneManager.getPlayer()
     }
 
     fun playerDisconnected(id: String) {

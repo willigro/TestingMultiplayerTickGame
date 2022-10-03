@@ -3,7 +3,6 @@ package com.rittmann.myapplication.main.scene
 import android.graphics.Canvas
 import android.view.MotionEvent
 import com.rittmann.myapplication.main.entity.Player
-import com.rittmann.myapplication.main.entity.Position
 import com.rittmann.myapplication.main.entity.server.WorldState
 import com.rittmann.myapplication.main.match.MatchEvents
 
@@ -21,12 +20,13 @@ class SceneManager(
     }
 
     fun update() {
-        matchEvents.update()
         scene.update()
+        matchEvents.update()
     }
 
     fun draw(canvas: Canvas) {
         scene.draw(canvas)
+        matchEvents.draw()
     }
 
     fun ownPlayerCreated(player: Player) {
@@ -41,16 +41,14 @@ class SceneManager(
         scene.playerDisconnected(id)
     }
 
+    fun getPlayer(): Player? = scene.getPlayer()
+
     fun onJoystickMovementChanged(angle: Double, strength: Double) {
         scene.onJoystickMovementChanged(angle, strength)
     }
 
     fun onJoystickAimChanged(angle: Double, strength: Double) {
         scene.onJoystickAimChanged(angle, strength)
-    }
-
-    fun getPlayerPosition(): Position {
-        return scene.getPlayerPosition()
     }
 
     fun onPlayerUpdate(worldState: WorldState) {

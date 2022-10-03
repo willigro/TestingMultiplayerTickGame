@@ -15,8 +15,8 @@ interface Scene {
     fun ownPlayerCreated(player: Player)
     fun newPlayerConnected(player: Player)
     fun playerDisconnected(id: String)
+    fun getPlayer(): Player?
     fun onJoystickMovementChanged(angle: Double, strength: Double)
     fun onJoystickAimChanged(angle: Double, strength: Double)
-    fun getPlayerPosition(): Position
     fun onPlayerUpdate(worldState: WorldState)
 }

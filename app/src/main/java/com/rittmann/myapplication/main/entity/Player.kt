@@ -7,12 +7,12 @@ import com.rittmann.myapplication.main.draw.DrawObject
 import com.rittmann.myapplication.main.entity.body.Body
 import com.rittmann.myapplication.main.entity.collisor.Collidable
 import com.rittmann.myapplication.main.entity.collisor.Collider
-import com.rittmann.myapplication.main.extensions.orZero
 import com.rittmann.myapplication.main.entity.server.PlayerAim
 import com.rittmann.myapplication.main.entity.server.PlayerMovement
 import com.rittmann.myapplication.main.entity.server.PlayerServer
 import com.rittmann.myapplication.main.entity.server.wasAimApplied
 import com.rittmann.myapplication.main.entity.server.wasPositionMovementApplied
+import com.rittmann.myapplication.main.extensions.orZero
 import com.rittmann.myapplication.main.utils.Logger
 
 const val BODY_WIDTH = 40
@@ -24,34 +24,43 @@ data class Player(
     val color: String = "",
 ) : DrawObject, Collidable, Logger {
 
+    /**
+     * Physic values
+     * */
     private val body: Body = Body(position.copy(), BODY_WIDTH, BODY_HEIGHT)
     private val mainGunPointer: Pointer = Pointer(
         position.copy(),
         BODY_WIDTH.toDouble(),
         BODY_HEIGHT.toDouble(),
     )
-
     private val collider: Collider = Collider(position.copy(), BODY_WIDTH, BODY_HEIGHT, this)
 
-    /*
-    * Player is moving
-    * */
-    private var isMoving: Boolean = false
-
-    /*
-    * Player is aiming (moving the aim joystick)
-    * */
-    private var isAiming: Boolean = false
-
-    /*
-    * Keep the player movement and aim data got from the server
-    * */
+    /**
+     * Server values
+     * */
     private var playerServer: PlayerServer? = null
 
+    // Player is moving on the server
+    private var isPlayerRemotelyMoving: Boolean = false
+
+    // Player is aiming on the server
+    private var isPlayerRemotelyAiming: Boolean = false
+
+    /**
+     * Stats values
+     * */
+    private var maxHealthPoints: Double = 10293.0
+    private var currentHealthPoints: Double = maxHealthPoints
+
+    /**
+     * Draw
+     * */
     private val paint = Paint()
+    private val textPaint = Paint()
 
     init {
         paint.color = Color.parseColor(color.ifEmpty { "#FFFFFF" })
+        textPaint.color = Color.WHITE
     }
 
     override fun update() {
@@ -70,7 +79,7 @@ data class Player(
     }
 
     private fun updatePlayerAim() {
-        if (isAiming) {
+        if (isPlayerRemotelyAiming) {
             if (playerServer.wasAimApplied()) {
                 // force position
                 aim(playerServer?.playerAim)
@@ -82,7 +91,7 @@ data class Player(
     }
 
     private fun updatePlayerMovement() {
-        if (isMoving) {
+        if (isPlayerRemotelyMoving) {
             // New position received but it was not updated yet
             if (playerServer.wasPositionMovementApplied()) {
                 // force position
@@ -106,6 +115,8 @@ data class Player(
         canvas.restore()
 
         mainGunPointer.draw(canvas)
+
+        drawPlayerName(canvas)
     }
 
     override fun free() {
@@ -127,11 +138,21 @@ data class Player(
         }
     }
 
+    private fun drawPlayerName(canvas: Canvas) {
+        textPaint.textAlign = Paint.Align.CENTER
+        textPaint.textSize = 30f
+
+        val xPos = position.x
+        val yPos = position.y - 40
+
+        canvas.drawText(playerId, xPos.toFloat(), yPos.toFloat(), textPaint)
+    }
+
     fun keepTheNextPlayerMovement(playerServer: PlayerServer) {
         // when the angle is bigger than zero it will mean that the joystick (or some movement)
         // was applied to the player
-        this.isMoving = playerServer.playerMovement.angle > 0.0
-        this.isAiming = playerServer.playerAim.angle > 0.0
+        this.isPlayerRemotelyMoving = playerServer.playerMovement.angle > 0.0
+        this.isPlayerRemotelyAiming = playerServer.playerAim.angle > 0.0
 
         // keep the playerMovement
         this.playerServer = playerServer
@@ -202,7 +223,7 @@ data class Player(
         return createBullet()
     }
 
-    private fun createBullet() : Bullet {
+    private fun createBullet(): Bullet {
         val pointerPosition = mainGunPointer.getRotatedPosition()
         val bullet = Bullet(
             bulletId = "${playerId}_${System.nanoTime()}",
@@ -218,6 +239,10 @@ data class Player(
 
         bullet.retrieveCollider().enable()
         return bullet
+    }
+
+    fun getCurrentHp(): Double {
+        return currentHealthPoints
     }
 
     companion object {

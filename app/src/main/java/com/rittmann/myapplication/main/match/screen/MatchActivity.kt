@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.ListView
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.rittmann.myapplication.R
 import com.rittmann.myapplication.main.components.JoystickView
@@ -31,12 +32,19 @@ class MatchActivity : AppCompatActivity(), ConnectionControlEvents, MatchEvents,
     private var gamePanel: GamePanel? = null
     private var adapter: ArrayAdapter<String?>? = null
 
+    /**
+     * Think about use BINDING
+     * */
     private val joystickLeft: JoystickView by lazy {
         findViewById(R.id.joystick_left)
     }
 
     private val joystickRight: JoystickView by lazy {
         findViewById(R.id.joystick_right)
+    }
+
+    private val txtValueHp: TextView by lazy {
+        findViewById(R.id.txt_value_hp)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -131,21 +139,29 @@ class MatchActivity : AppCompatActivity(), ConnectionControlEvents, MatchEvents,
 
     override fun update() {
         gamePanel?.apply {
-            val playerPosition = getPlayerPosition()
+            getPlayer()?.position?.also { position ->
+                matchController.update(
+                    playerMovementEmit = PlayerMovementEmit(
+                        position = position,
+                        angle = joystickLeft.angle,
+                        strength = joystickLeft.strength,
+                        velocity = Player.VELOCITY,
+                    ),
 
-            matchController.update(
-                playerMovementEmit = PlayerMovementEmit(
-                    position = playerPosition,
-                    angle = joystickLeft.angle,
-                    strength = joystickLeft.strength,
-                    velocity = Player.VELOCITY,
-                ),
-
-                playerAimEmit = PlayerAimEmit(
-                    angle = joystickRight.angle,
-                    strength = joystickRight.strength,
+                    playerAimEmit = PlayerAimEmit(
+                        angle = joystickRight.angle,
+                        strength = joystickRight.strength,
+                    )
                 )
-            )
+            }
+        }
+    }
+
+    override fun draw() {
+        gamePanel?.apply {
+            getPlayer()?.also { player ->
+                txtValueHp.text = player.getCurrentHp().toString()
+            }
         }
     }
 }

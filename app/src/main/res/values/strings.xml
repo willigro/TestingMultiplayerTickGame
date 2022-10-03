@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">My Application</string>
+
+    <!-- Match Interface -->
+    <string name="match_interface_label_hp">HP</string>
+
+    <string name="match_interface_initial_value_hp">100%</string>
 </resources>
