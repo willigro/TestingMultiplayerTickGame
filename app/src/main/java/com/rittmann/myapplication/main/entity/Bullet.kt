@@ -10,7 +10,7 @@ import com.rittmann.myapplication.main.entity.collisor.Collider
 import com.rittmann.myapplication.main.utils.Logger
 
 private const val BULLET_SIZE = 15
-const val BULLET_DEFAULT_VELOCITY = 10.0
+const val BULLET_DEFAULT_VELOCITY = 4.0
 const val BULLET_DEFAULT_MAX_DISTANCE = 200.0
 
 class Bullet(

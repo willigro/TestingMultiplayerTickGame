@@ -33,6 +33,7 @@ class ConnectionControl(
     fun disconnect(): ConnectionControl {
         try {
             socket?.disconnect()
+            socket?.off()
             connectionControlEvents.logCallback("Disconnecting!")
         } catch (e: URISyntaxException) {
             e.printStackTrace()

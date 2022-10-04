@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.ListView
 import android.widget.TextView
+import androidx.annotation.MainThread
 import androidx.appcompat.app.AppCompatActivity
 import com.rittmann.myapplication.R
 import com.rittmann.myapplication.main.components.JoystickView
@@ -74,7 +75,9 @@ class MatchActivity : AppCompatActivity(), ConnectionControlEvents, MatchEvents,
     private fun setupUi() {
         configureListViewLog()
 
-        findViewById<ViewGroup>(R.id.container).addView(gamePanel)
+        gamePanel?.also {
+            findViewById<ViewGroup>(R.id.container).addView(it)
+        }
 
         /**
          * TODO: check later a better way to send these information, since I'm going to send the
@@ -99,12 +102,6 @@ class MatchActivity : AppCompatActivity(), ConnectionControlEvents, MatchEvents,
         val listView = findViewById<ListView>(R.id.container_log)
         adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, arrayListOf())
         listView.adapter = adapter
-    }
-
-    companion object {
-        var SCREEN_WIDTH = 0
-        var SCREEN_HEIGHT = 0
-        var SCREEN_DENSITY = 0f
     }
 
     override fun logCallback(log: String) {
@@ -158,10 +155,16 @@ class MatchActivity : AppCompatActivity(), ConnectionControlEvents, MatchEvents,
     }
 
     override fun draw() {
-        gamePanel?.apply {
-            getPlayer()?.also { player ->
-                txtValueHp.text = player.getCurrentHp().toString()
-            }
-        }
+//        gamePanel?.apply {
+//            getPlayer()?.also { player ->
+//                txtValueHp.text = player.getCurrentHp().toString()
+//            }
+//        }
+    }
+
+    companion object {
+        var SCREEN_WIDTH = 0
+        var SCREEN_HEIGHT = 0
+        var SCREEN_DENSITY = 0f
     }
 }

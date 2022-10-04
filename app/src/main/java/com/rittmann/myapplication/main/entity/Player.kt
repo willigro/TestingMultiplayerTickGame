@@ -61,7 +61,11 @@ data class Player(
 
     init {
         paint.color = Color.parseColor(color.ifEmpty { "#FFFFFF" })
+
         paintText.color = Color.WHITE
+        paintText.textAlign = Paint.Align.CENTER
+        paintText.textSize = 30f
+
         paintHp.color = Color.RED
     }
 
@@ -147,8 +151,6 @@ data class Player(
     }
 
     private fun drawPlayerName(canvas: Canvas) {
-        paintText.textAlign = Paint.Align.CENTER
-        paintText.textSize = 30f
 
         val xPos = position.x
         val yPos = position.y - 40
