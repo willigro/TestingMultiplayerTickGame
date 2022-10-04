@@ -29,7 +29,7 @@ class GamePanel(
         return this
     }
 
-    override fun update(deltaTime: Float) {
+    override fun update(deltaTime: Double) {
         sceneManager.update(deltaTime)
     }
 

@@ -19,7 +19,7 @@ class SceneManager(
         scene.receiveTouch(motionEvent)
     }
 
-    fun update(deltaTime: Float) {
+    fun update(deltaTime: Double) {
         scene.update(deltaTime)
         matchEvents.update(deltaTime)
     }

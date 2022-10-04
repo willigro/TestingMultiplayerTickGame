@@ -133,7 +133,7 @@ class MatchActivity : AppCompatActivity(), ConnectionControlEvents, MatchEvents,
         matchController.shoot(bullet)
     }
 
-    override fun update(deltaTime: Float) {
+    override fun update(deltaTime: Double) {
         gamePanel?.apply {
             getPlayer()?.position?.also { position ->
                 matchController.update(

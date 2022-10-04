@@ -10,12 +10,12 @@ import com.rittmann.myapplication.main.entity.collisor.Collider
 import com.rittmann.myapplication.main.utils.Logger
 
 private const val BULLET_SIZE = 15
-const val BULLET_DEFAULT_VELOCITY = 4.0
+const val BULLET_DEFAULT_VELOCITY = 500.0
 const val BULLET_DEFAULT_MAX_DISTANCE = 200.0
 
 class Bullet(
     val bulletId: String,
-    var ownerId: String ,
+    var ownerId: String,
     val position: Position,
     var angle: Double,
     var maxDistance: Double,
@@ -33,13 +33,13 @@ class Bullet(
         paint.color = Color.RED
     }
 
-    override fun update(deltaTime: Float) {
+    override fun update(deltaTime: Double) {
         val normalizedPosition = Position.calculateNormalizedPosition(
             angle
         )
 
-        val x = normalizedPosition.x * velocity
-        val y = normalizedPosition.y * velocity
+        val x = normalizedPosition.x * velocity * deltaTime
+        val y = normalizedPosition.y * velocity * deltaTime
 
         position.sum(x, y)
 

@@ -27,11 +27,12 @@ class SceneMain(
     private var joystickMovement: Joystick = Joystick()
     private var joystickAim: Joystick = Joystick()
 
-    override fun update(deltaTime: Float) {
+    override fun update(deltaTime: Double) {
 //        deltaTime.toString().log()
         player?.also { player ->
             if (joystickMovement.isWorking) {
                 player.move(
+                    deltaTime,
                     joystickMovement.angle,
                     joystickMovement.strength,
                 )
@@ -156,7 +157,7 @@ class SceneMain(
     }
 
 
-    private fun updateBullets(deltaTime: Float) {
+    private fun updateBullets(deltaTime: Double) {
         val bulletIterator = _bulletTest.iterator()
 
         while (bulletIterator.hasNext()) {

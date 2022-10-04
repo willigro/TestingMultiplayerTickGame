@@ -8,7 +8,7 @@ import com.rittmann.myapplication.main.entity.server.WorldState
 
 // TODO organize by server and interface
 interface Scene {
-    fun update(deltaTime: Float)
+    fun update(deltaTime: Double)
     fun draw(canvas: Canvas)
     fun terminate()
     fun receiveTouch(motionEvent: MotionEvent)

@@ -11,25 +11,24 @@ class GameMainThread(
     private val million: Long = 1000000
 
     private var running = false
-    private var lastTime: Long = 0L
 
     override fun run() {
-        var startFrameTime: Long = System.nanoTime()
+        var startFrameTime: Long
+        var lastTime: Long = System.nanoTime()
         var frameCount = 0
         var totalTime: Long = 0
-        var elapsed = 0L
-        var deltaTime: Long = 0L
+        var deltaTime: Long
 
         while (running) {
-            val time = System.nanoTime()
+            startFrameTime = System.nanoTime()
 
-            deltaTime = (time - startFrameTime) / million
-            startFrameTime = time
+            deltaTime = (startFrameTime - lastTime) / million
+            lastTime = startFrameTime
 
 //            Thread.currentThread().name.log()
             canvas = null
 
-            update(1f / deltaTime.coerceAtLeast(1))
+            update(1.0 / deltaTime.coerceAtLeast(1))
             calculateSleep(targetTime, startFrameTime, million)
             totalTime += System.nanoTime() - startFrameTime
             frameCount++
@@ -55,7 +54,7 @@ class GameMainThread(
         }
     }
 
-    private fun update(deltaTime: Float) {
+    private fun update(deltaTime: Double) {
         try {
             canvas = surfaceHolder.lockCanvas()
             // garente que apenas uma thread por vez execurata este trecho

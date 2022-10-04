@@ -69,11 +69,15 @@ data class Player(
         paintHp.color = Color.RED
     }
 
-    override fun update(deltaTime: Float) {
-        updatePlayerMovement()
-        updatePlayerAim()
+    override fun update(deltaTime: Double) {
+        remoteUpdate(deltaTime)
         updateBodyPosition()
         updateColliderPosition()
+    }
+
+    private fun remoteUpdate(deltaTime: Double) {
+        updatePlayerMovement(deltaTime)
+        updatePlayerAim()
     }
 
     private fun updateColliderPosition() {
@@ -96,15 +100,15 @@ data class Player(
         }
     }
 
-    private fun updatePlayerMovement() {
+    private fun updatePlayerMovement(deltaTime: Double) {
         if (isPlayerRemotelyMoving) {
             // New position received but it was not updated yet
             if (playerServer.wasPositionMovementApplied()) {
                 // force position
-                setPosition(playerServer?.playerMovement)
+                setPosition(playerServer?.playerMovement, deltaTime)
             } else {
                 // keep moving util a new position is received
-                moveUsingKeptPlayerMovement()
+                moveUsingKeptPlayerMovement(deltaTime)
             }
         }
     }
@@ -161,7 +165,7 @@ data class Player(
     private fun drawPlayerHp(canvas: Canvas) {
         val left = position.x.toFloat() - body.width - 50
         val diffPercentage = (maxHealthPoints - currentHealthPoints).toFloat()
-        val totalRight  = (body.width).toFloat() + 50
+        val totalRight = (body.width).toFloat() + 50
 
         val right = totalRight - (diffPercentage * (totalRight / 100f))
 
@@ -186,28 +190,28 @@ data class Player(
         this.playerServer = playerServer
     }
 
-    fun move(angle: Double, strength: Double) {
+    fun move(deltaTime: Double, angle: Double, strength: Double) {
         playerServer?.playerMovement?.resetPositionWasApplied()
 
         val normalizedPosition = Position.calculateNormalizedPosition(angle, strength)
 
-        val x = normalizedPosition.x * VELOCITY
-        val y = normalizedPosition.y * VELOCITY
+        val x = normalizedPosition.x * VELOCITY * deltaTime
+        val y = normalizedPosition.y * VELOCITY * deltaTime
 
         this.position.sum(x, y)
 
         mainGunPointer.moveAndRotate(x, y)
     }
 
-    private fun moveUsingKeptPlayerMovement() {
+    private fun moveUsingKeptPlayerMovement(deltaTime: Double) {
         playerServer?.playerMovement?.also { playerMovement ->
             val normalizedPosition = Position.calculateNormalizedPosition(
                 playerMovement.angle.orZero(),
                 playerMovement.strength.orZero()
             )
 
-            val x = normalizedPosition.x * playerMovement.velocity
-            val y = normalizedPosition.y * playerMovement.velocity
+            val x = normalizedPosition.x * playerMovement.velocity * deltaTime
+            val y = normalizedPosition.y * playerMovement.velocity * deltaTime
 
             this.position.sum(x, y)
 
@@ -215,8 +219,10 @@ data class Player(
         }
     }
 
-    private fun setPosition(playerMovement: PlayerMovement?) {
+    private fun setPosition(playerMovement: PlayerMovement?, deltaTime: Double) {
         playerMovement?.position?.also {
+            it.multiple(deltaTime)
+
             position.set(it.x, it.y)
 
             mainGunPointer.setMoveAndRotate(it.x, it.y)
@@ -274,6 +280,7 @@ data class Player(
     }
 
     companion object {
-        const val VELOCITY = 8.0
+        // TODO get it from the server
+        const val VELOCITY = 300.0
     }
 }
