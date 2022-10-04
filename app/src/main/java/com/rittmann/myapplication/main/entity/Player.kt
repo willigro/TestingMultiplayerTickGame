@@ -56,11 +56,13 @@ data class Player(
      * Draw
      * */
     private val paint = Paint()
-    private val textPaint = Paint()
+    private val paintText = Paint()
+    private val paintHp = Paint()
 
     init {
         paint.color = Color.parseColor(color.ifEmpty { "#FFFFFF" })
-        textPaint.color = Color.WHITE
+        paintText.color = Color.WHITE
+        paintHp.color = Color.RED
     }
 
     override fun update() {
@@ -105,18 +107,13 @@ data class Player(
 
     override fun draw(canvas: Canvas) {
         // rotate and in its own axis
-        canvas.save()
-        canvas.rotate(
-            -body.rotationAngle.toFloat(),
-            (position.x).toFloat(),
-            (position.y).toFloat()
-        )
-        canvas.drawRect(body.rect, paint)
-        canvas.restore()
+        drawBody(canvas)
 
         mainGunPointer.draw(canvas)
 
         drawPlayerName(canvas)
+
+        drawPlayerHp(canvas)
     }
 
     override fun free() {
@@ -138,14 +135,43 @@ data class Player(
         }
     }
 
+    private fun drawBody(canvas: Canvas) {
+        canvas.save()
+        canvas.rotate(
+            -body.rotationAngle.toFloat(),
+            (position.x).toFloat(),
+            (position.y).toFloat()
+        )
+        canvas.drawRect(body.rect, paint)
+        canvas.restore()
+    }
+
     private fun drawPlayerName(canvas: Canvas) {
-        textPaint.textAlign = Paint.Align.CENTER
-        textPaint.textSize = 30f
+        paintText.textAlign = Paint.Align.CENTER
+        paintText.textSize = 30f
 
         val xPos = position.x
         val yPos = position.y - 40
 
-        canvas.drawText(playerId, xPos.toFloat(), yPos.toFloat(), textPaint)
+        canvas.drawText(playerId, xPos.toFloat(), yPos.toFloat(), paintText)
+    }
+
+    private fun drawPlayerHp(canvas: Canvas) {
+        val left = position.x.toFloat() - body.width - 50
+        val diffPercentage = (maxHealthPoints - currentHealthPoints).toFloat()
+        val totalRight  = (body.width).toFloat() + 50
+
+        val right = totalRight - (diffPercentage * (totalRight / 100f))
+
+        val top = (position.y + body.height + 30f).toFloat()
+        val bottom = top + 10f
+        canvas.drawRect(
+            left,
+            top,
+            (position.x + right).toFloat(),
+            bottom,
+            paintHp
+        )
     }
 
     fun keepTheNextPlayerMovement(playerServer: PlayerServer) {

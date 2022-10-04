@@ -54,4 +54,8 @@ class SceneManager(
     fun onPlayerUpdate(worldState: WorldState) {
         scene.onPlayerUpdate(worldState)
     }
+
+    fun getEnemies(): List<Player> {
+        return scene.getEnemies()
+    }
 }

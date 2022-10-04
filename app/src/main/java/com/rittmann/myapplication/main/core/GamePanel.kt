@@ -83,6 +83,10 @@ class GamePanel(
         return sceneManager.getPlayer()
     }
 
+    fun getEnemies(): List< Player> {
+        return sceneManager.getEnemies()
+    }
+
     fun playerDisconnected(id: String) {
         sceneManager.playerDisconnected(id)
     }

@@ -149,6 +149,10 @@ class SceneMain(
         }
     }
 
+    override fun getEnemies(): List<Player> {
+        return enemies
+    }
+
 
     private fun updateBullets() {
         val bulletIterator = _bulletTest.iterator()
