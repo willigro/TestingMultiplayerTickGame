@@ -33,7 +33,7 @@ class Bullet(
         paint.color = Color.RED
     }
 
-    override fun update() {
+    override fun update(deltaTime: Float) {
         val normalizedPosition = Position.calculateNormalizedPosition(
             angle
         )

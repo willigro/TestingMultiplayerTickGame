@@ -6,7 +6,6 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.ListView
 import android.widget.TextView
-import androidx.annotation.MainThread
 import androidx.appcompat.app.AppCompatActivity
 import com.rittmann.myapplication.R
 import com.rittmann.myapplication.main.components.JoystickView
@@ -134,7 +133,7 @@ class MatchActivity : AppCompatActivity(), ConnectionControlEvents, MatchEvents,
         matchController.shoot(bullet)
     }
 
-    override fun update() {
+    override fun update(deltaTime: Float) {
         gamePanel?.apply {
             getPlayer()?.position?.also { position ->
                 matchController.update(

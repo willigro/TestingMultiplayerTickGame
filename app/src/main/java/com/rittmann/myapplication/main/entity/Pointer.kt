@@ -21,7 +21,7 @@ class Pointer(
         paint.color = Color.YELLOW
     }
 
-    override fun update() {}
+    override fun update(deltaTime: Float) {}
 
     override fun draw(canvas: Canvas) {
         canvas.drawRect(rect, paint)

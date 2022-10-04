@@ -19,9 +19,9 @@ class SceneManager(
         scene.receiveTouch(motionEvent)
     }
 
-    fun update() {
-        scene.update()
-        matchEvents.update()
+    fun update(deltaTime: Float) {
+        scene.update(deltaTime)
+        matchEvents.update(deltaTime)
     }
 
     fun draw(canvas: Canvas) {

@@ -27,7 +27,8 @@ class SceneMain(
     private var joystickMovement: Joystick = Joystick()
     private var joystickAim: Joystick = Joystick()
 
-    override fun update() {
+    override fun update(deltaTime: Float) {
+//        deltaTime.toString().log()
         player?.also { player ->
             if (joystickMovement.isWorking) {
                 player.move(
@@ -50,18 +51,19 @@ class SceneMain(
                 }
             }
 
-            player.update()
+            player.update(deltaTime)
 
             enemies.forEach {
-                it.update()
+                it.update(deltaTime)
             }
 
             GlobalCollisions.verifyCollisions()
         }
-        updateBullets()
+        updateBullets(deltaTime)
     }
 
     override fun draw(canvas: Canvas) {
+//        Thread.currentThread().name.log()
 //        canvas.drawColor(StardardColors.INSTANCE.getBackground());
         player?.draw(canvas)
         enemies.forEach { it.draw(canvas) }
@@ -154,7 +156,7 @@ class SceneMain(
     }
 
 
-    private fun updateBullets() {
+    private fun updateBullets(deltaTime: Float) {
         val bulletIterator = _bulletTest.iterator()
 
         while (bulletIterator.hasNext()) {
@@ -164,7 +166,7 @@ class SceneMain(
                 currentBullet.free()
                 bulletIterator.remove()
             } else {
-                currentBullet.update()
+                currentBullet.update(deltaTime)
             }
         }
     }

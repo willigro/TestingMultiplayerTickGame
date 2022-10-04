@@ -2,28 +2,41 @@ package com.rittmann.myapplication.main.core
 
 import android.graphics.Canvas
 import android.view.SurfaceHolder
+import com.rittmann.myapplication.main.utils.Logger
 
-class GameMainThread(private val surfaceHolder: SurfaceHolder, private val game: GamePanel) :
-    Thread() {
+class GameMainThread(
+    private val surfaceHolder: SurfaceHolder, private val game: GamePanel
+) : Thread(), Logger {
+    private val targetTime = (1000 / MAX_FPS).toLong()
+    private val million: Long = 1000000
+
     private var running = false
+    private var lastTime: Long = 0L
+
     override fun run() {
-        var startTime: Long
+        var startFrameTime: Long = System.nanoTime()
         var frameCount = 0
         var totalTime: Long = 0
-        val targetTime = (1000 / MAX_FPS).toLong()
-        val million: Long = 1000000
+        var elapsed = 0L
+        var deltaTime: Long = 0L
 
         while (running) {
-            startTime = System.nanoTime()
+            val time = System.nanoTime()
+
+            deltaTime = (time - startFrameTime) / million
+            startFrameTime = time
+
+//            Thread.currentThread().name.log()
             canvas = null
-            draw()
-            calculateSleep(targetTime, startTime, million)
-            totalTime += System.nanoTime() - startTime
+
+            update(1f / deltaTime.coerceAtLeast(1))
+            calculateSleep(targetTime, startFrameTime, million)
+            totalTime += System.nanoTime() - startFrameTime
             frameCount++
 
             if (frameCount == MAX_FPS) {
-                val averageFps =
-                    (1000 / (totalTime / frameCount.toFloat() / million.toFloat())).toDouble()
+//                val averageFps =
+//                    (1000 / (totalTime / frameCount.toFloat() / million.toFloat())).toDouble()
                 frameCount = 0
                 totalTime = 0
             }
@@ -42,12 +55,12 @@ class GameMainThread(private val surfaceHolder: SurfaceHolder, private val game:
         }
     }
 
-    private fun draw() {
+    private fun update(deltaTime: Float) {
         try {
             canvas = surfaceHolder.lockCanvas()
-            //garente que apenas uma thread por vez execurata este trecho
+            // garente que apenas uma thread por vez execurata este trecho
             synchronized(surfaceHolder) {
-                game.update()
+                game.update(deltaTime)
                 canvas?.also {
                     game.draw(it)
                 }

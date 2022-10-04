@@ -29,8 +29,8 @@ class GamePanel(
         return this
     }
 
-    override fun update() {
-        sceneManager.update()
+    override fun update(deltaTime: Float) {
+        sceneManager.update(deltaTime)
     }
 
     override fun draw(canvas: Canvas) {

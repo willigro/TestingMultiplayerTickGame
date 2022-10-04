@@ -44,7 +44,7 @@ class Collider(
         return rect.contains(x, y)
     }
 
-    override fun update() {
+    override fun update(deltaTime: Float) {
         TODO("Not yet implemented")
     }
 
