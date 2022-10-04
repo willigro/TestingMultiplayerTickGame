@@ -136,6 +136,7 @@ class MatchActivity : AppCompatActivity(), ConnectionControlEvents, MatchEvents,
     override fun update(deltaTime: Double) {
         gamePanel?.apply {
             getPlayer()?.position?.also { position ->
+//                position.toString().log()
                 matchController.update(
                     playerMovementEmit = PlayerMovementEmit(
                         position = position,

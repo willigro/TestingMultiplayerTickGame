@@ -28,7 +28,7 @@ class GameMainThread(
 //            Thread.currentThread().name.log()
             canvas = null
 
-            update(1.0 / deltaTime.coerceAtLeast(1))
+            update(deltaTime = deltaTime.coerceAtLeast(1) / 1000.0)
             calculateSleep(targetTime, startFrameTime, million)
             totalTime += System.nanoTime() - startFrameTime
             frameCount++
