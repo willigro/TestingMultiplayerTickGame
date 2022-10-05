@@ -5,6 +5,7 @@ import com.rittmann.myapplication.main.entity.BULLET_DEFAULT_VELOCITY
 import com.rittmann.myapplication.main.entity.Bullet
 import com.rittmann.myapplication.main.entity.server.PlayerShootingEmit
 import com.rittmann.myapplication.main.entity.server.WorldState
+import com.rittmann.myapplication.main.scene.SceneManager
 import com.rittmann.myapplication.main.server.ConnectionControl
 
 class MatchController(private val connectionControl: ConnectionControl) {
@@ -37,6 +38,16 @@ class MatchController(private val connectionControl: ConnectionControl) {
         connectionControl.emit(
             ConnectionControl.EMIT_PLAYER_UPDATE, Gson().toJson(
                 worldState
+            )
+        )
+    }
+
+    fun update(
+        inputWorldState: SceneManager.InputWorldState
+    ) {
+        connectionControl.emit(
+            ConnectionControl.EMIT_PLAYER_UPDATE, Gson().toJson(
+                inputWorldState
             )
         )
     }

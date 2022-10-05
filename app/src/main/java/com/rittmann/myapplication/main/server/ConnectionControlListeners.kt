@@ -125,13 +125,16 @@ class ConnectionControlListeners(
 
     private fun onWorldUpdated() = with(socket) {
         on(ON_WORLD_STATE) { args ->
-            val data = args[0] as JSONObject
-            try {
+            if (args != null && args.isNotEmpty()) {
+                val data = args[0] as JSONObject
+                try {
 //                connectionControlEvents.logCallback("ON_PLAYER_SHOOTING Shooting result: $result")
-                connectionControlEvents.onPlayerUpdate(data.mapToWorldUpdate())
-            } catch (e: JSONException) {
-                e.printStackTrace()
-                connectionControlEvents.logCallback("ON_PLAYER_MOVED Error")
+                    connectionControlEvents.onPlayerUpdate(data.mapToListWorldUpdate())
+//                    connectionControlEvents.onPlayerUpdate(data.mapToWorldUpdate())
+                } catch (e: JSONException) {
+                    e.printStackTrace()
+                    connectionControlEvents.logCallback("ON_PLAYER_MOVED Error")
+                }
             }
         }
     }

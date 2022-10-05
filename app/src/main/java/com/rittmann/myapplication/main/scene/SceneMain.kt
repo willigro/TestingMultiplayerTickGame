@@ -110,18 +110,26 @@ class SceneMain(
     }
 
     // Improve it later
-    override fun onPlayerUpdate(worldState: WorldState, deltaTime: Double) {
+    override fun onPlayerUpdate(worldState: WorldState, deltaTime: Double, force: Boolean) {
         worldState.playerUpdate.players.forEach { playerServer ->
             if (playerServer.id == player?.playerId) {
 //                player?.keepTheNextPlayerMovement(playerServer)
 
-
-                player?.move(
-                    deltaTime, // forcing a set
-                    playerServer.playerMovement.angle,
-                    playerServer.playerMovement.strength,
+                if (force) {
+                    player?.move(
+                        deltaTime, // forcing a set
+                        playerServer.playerMovement.angle,
+                        playerServer.playerMovement.strength,
+                        playerServer.playerMovement.position,
+                    )
+                } else {
+                    player?.move(
+                        deltaTime, // forcing a set
+                        playerServer.playerMovement.angle,
+                        playerServer.playerMovement.strength,
 //                    playerServer.playerMovement.position,
-                )
+                    )
+                }
 
                 player?.aim(
                     playerServer.playerAim.angle,

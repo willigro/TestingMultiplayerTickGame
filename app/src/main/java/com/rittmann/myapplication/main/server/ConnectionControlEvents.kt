@@ -9,4 +9,5 @@ interface ConnectionControlEvents {
     fun newPlayerConnected(player: ConnectionControlListeners.NewPlayerConnected)
     fun playerDisconnected(id: String)
     fun onPlayerUpdate(worldState: WorldState)
+    fun onPlayerUpdate(worldState: List<WorldState>)
 }

@@ -14,6 +14,7 @@ import com.rittmann.myapplication.main.entity.Bullet
 import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.server.WorldState
 import com.rittmann.myapplication.main.match.MatchEvents
+import com.rittmann.myapplication.main.scene.SceneManager
 import com.rittmann.myapplication.main.server.ConnectionControl
 import com.rittmann.myapplication.main.server.ConnectionControlEvents
 import com.rittmann.myapplication.main.server.ConnectionControlListeners
@@ -128,12 +129,20 @@ class MatchActivity : AppCompatActivity(), ConnectionControlEvents, MatchEvents,
         gamePanel?.onPlayerUpdate(worldState)
     }
 
+    override fun onPlayerUpdate(worldState: List<WorldState>) {
+        gamePanel?.onPlayerUpdate(worldState)
+    }
+
     override fun shoot(bullet: Bullet) {
         matchController.shoot(bullet)
     }
 
     override fun sendTheUpdatedState(deltaTime: Double, tick: Int, worldState: WorldState?) {
         worldState?.also { matchController.update(it) }
+    }
+
+    override fun sendTheUpdatedState(inputWorldState: SceneManager.InputWorldState) {
+        matchController.update(inputWorldState)
     }
 
     override fun draw() {

@@ -88,3 +88,15 @@ fun JSONObject.mapToWorldUpdate(): WorldState {
         bulletUpdate = BulletUpdate(bullets = bullets),
     )
 }
+
+
+fun JSONObject.mapToListWorldUpdate(): List<WorldState> {
+
+    val result = arrayListOf<WorldState>()
+    val arr = this.getJSONArray("response")
+    for (i in 0 until arr.length()) {
+        result.add(arr.getJSONObject(i).mapToWorldUpdate())
+    }
+
+    return result
+}

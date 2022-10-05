@@ -95,4 +95,8 @@ class GamePanel(
     fun onPlayerUpdate(worldState: WorldState) {
         sceneManager.onPlayerUpdate(worldState)
     }
+
+    fun onPlayerUpdate(worldState: List<WorldState>) {
+        sceneManager.onPlayerUpdate(worldState)
+    }
 }
