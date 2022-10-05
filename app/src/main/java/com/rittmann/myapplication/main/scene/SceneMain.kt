@@ -60,12 +60,10 @@ class SceneMain(
 
             GlobalCollisions.verifyCollisions()
         }
-        updateBullets(deltaTime, tick)
+        updateBullets(deltaTime)
     }
 
     override fun draw(canvas: Canvas) {
-//        Thread.currentThread().name.log()
-//        canvas.drawColor(StardardColors.INSTANCE.getBackground());
         player?.draw(canvas)
         enemies.forEach { it.draw(canvas) }
         _bulletTest.forEach { it.draw(canvas) }
@@ -113,28 +111,26 @@ class SceneMain(
     override fun onPlayerUpdate(worldState: WorldState, deltaTime: Double, force: Boolean) {
         worldState.playerUpdate.players.forEach { playerServer ->
             if (playerServer.id == player?.playerId) {
-//                player?.keepTheNextPlayerMovement(playerServer)
-
                 if (force) {
                     player?.move(
-                        deltaTime, // forcing a set
                         playerServer.playerMovement.angle,
                         playerServer.playerMovement.strength,
                         playerServer.playerMovement.position,
                     )
                 } else {
                     player?.move(
-                        deltaTime, // forcing a set
+                        deltaTime,
                         playerServer.playerMovement.angle,
                         playerServer.playerMovement.strength,
-//                    playerServer.playerMovement.position,
                     )
                 }
 
+                // TODO: make the reconciliation
                 player?.aim(
                     playerServer.playerAim.angle,
                 )
             } else {
+                // I'm going to use the above move here
                 val enemy = enemies.firstOrNull { it.playerId == playerServer.id }
 
                 enemy?.keepTheNextPlayerMovement(playerServer)
@@ -176,8 +172,7 @@ class SceneMain(
         return enemies
     }
 
-
-    private fun updateBullets(deltaTime: Double, tick: Int) {
+    private fun updateBullets(deltaTime: Double) {
         val bulletIterator = _bulletTest.iterator()
 
         while (bulletIterator.hasNext()) {

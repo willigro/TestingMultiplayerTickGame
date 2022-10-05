@@ -125,10 +125,6 @@ class MatchActivity : AppCompatActivity(), ConnectionControlEvents, MatchEvents,
         gamePanel?.playerDisconnected(id)
     }
 
-    override fun onPlayerUpdate(worldState: WorldState) {
-        gamePanel?.onPlayerUpdate(worldState)
-    }
-
     override fun onPlayerUpdate(worldState: List<WorldState>) {
         gamePanel?.onPlayerUpdate(worldState)
     }

@@ -92,10 +92,6 @@ class GamePanel(
         sceneManager.playerDisconnected(id)
     }
 
-    fun onPlayerUpdate(worldState: WorldState) {
-        sceneManager.onPlayerUpdate(worldState)
-    }
-
     fun onPlayerUpdate(worldState: List<WorldState>) {
         sceneManager.onPlayerUpdate(worldState)
     }

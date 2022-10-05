@@ -68,12 +68,7 @@ class SceneManager(
         this.clientStateBuffer[bufferSlot] = createCurrentWorldState(clientTickNumber)
 
         // send input packet to server
-        // limiting the package
-        val startTickNumber =
-//            if (clientTickNumber - this.clientLastReceivedStateTick > 5) {
-//                clientTickNumber - 5
-//            } else
-                this.clientLastReceivedStateTick
+        val startTickNumber = this.clientLastReceivedStateTick
 
         for (tick in startTickNumber until clientTickNumber) {
             this.serverInputMsgs.inputs.add(this.clientInputBuffer[tick % cClientBufferSize])
@@ -83,7 +78,6 @@ class SceneManager(
 
         timer += deltaTime
         if (timer >= minTimeBetweenTicks) {
-//            "size=${this.serverInputMsgs.inputs.size}, clientLastReceivedStateTick=$clientLastReceivedStateTick".log()
             matchEvents.sendTheUpdatedState(this.serverInputMsgs.copy())
             serverInputMsgs.inputs.clear()
             serverInputMsgs = InputWorldState()
@@ -92,13 +86,9 @@ class SceneManager(
         this.clientTickNumber++
 
         if (clientStateMsgs.size > 0) {
-//            var stateMsg = this.clientStateMsgs.remove()
+            // make sure if there are any newer state messages available, we use those instead
             val stateMsg = this.clientStateMsgs.last()
             this.clientStateMsgs.clear()
-            // make sure if there are any newer state messages available, we use those instead
-//            while (clientStateMsgs.size > 0) {
-//                stateMsg = this.clientStateMsgs.remove()
-//            }
 
             this.clientLastReceivedStateTick = stateMsg.tick
 
@@ -195,25 +185,8 @@ class SceneManager(
         scene.onJoystickAimChanged(angle, strength)
     }
 
-    fun onPlayerUpdate(worldState: WorldState) {
-        // scene.onPlayerUpdate(worldState)
-//        if (tickStated.not()) {
-//            currentTick = worldState.tick
-//        }
-        "onPlayerUpdate, at tick=$currentTick, worldTick=${worldState.tick} updating latest ${worldState.playerUpdate.players.firstOrNull()?.playerMovement?.position}".log()
-//        latestServerState = worldState
-//        client_state_msgs.add(worldState)
-    }
-
     fun onPlayerUpdate(worldState: List<WorldState>) {
-        // scene.onPlayerUpdate(worldState)
-//        if (tickStated.not()) {
-//            currentTick = worldState.tick
-//        }
-//        "onPlayerUpdate, at tick=$currentTick, worldTick=${worldState.tick} updating latest ${worldState.playerUpdate.players.firstOrNull()?.playerMovement?.position}".log()
-//        latestServerState = worldState
         clientStateMsgs.addAll(worldState)
-        "client_state_msgs.size=${clientStateMsgs.size}".log()
     }
 
     fun getEnemies(): List<Player> {

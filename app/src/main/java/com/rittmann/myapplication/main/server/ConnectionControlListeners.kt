@@ -130,7 +130,6 @@ class ConnectionControlListeners(
                 try {
 //                connectionControlEvents.logCallback("ON_PLAYER_SHOOTING Shooting result: $result")
                     connectionControlEvents.onPlayerUpdate(data.mapToListWorldUpdate())
-//                    connectionControlEvents.onPlayerUpdate(data.mapToWorldUpdate())
                 } catch (e: JSONException) {
                     e.printStackTrace()
                     connectionControlEvents.logCallback("ON_PLAYER_MOVED Error")
