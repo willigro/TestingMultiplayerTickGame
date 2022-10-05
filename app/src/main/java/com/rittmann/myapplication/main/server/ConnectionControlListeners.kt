@@ -1,5 +1,6 @@
 package com.rittmann.myapplication.main.server
 
+import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.utils.Logger
 import io.socket.client.Socket
 import org.json.JSONException
@@ -69,7 +70,10 @@ class ConnectionControlListeners(
                         val newCreatedPlayer = json.mapToPlayer()
                         if (newCreatedPlayer.playerId != ownPlayer.playerId) {
                             connectionControlEvents.newPlayerConnected(
-                                newCreatedPlayer
+                                NewPlayerConnected(
+                                    player = newPlayerJson.mapToPlayer(),
+                                    tick = data.getInt("tick"),
+                                )
                             )
                         }
                     }
@@ -89,13 +93,20 @@ class ConnectionControlListeners(
                 val newPlayerJson = data.getJSONObject(DATA_NEW_PLAYER)
 
                 connectionControlEvents.logCallback("NEW_PLAYER Players: $players\nNew player: $newPlayerJson")
-                connectionControlEvents.newPlayerConnected(newPlayerJson.mapToPlayer())
+                connectionControlEvents.newPlayerConnected(
+                    NewPlayerConnected(
+                        player = newPlayerJson.mapToPlayer(),
+                        tick = data.getInt("tick"),
+                    )
+                )
             } catch (e: JSONException) {
                 e.printStackTrace()
                 connectionControlEvents.logCallback("NEW_PLAYER Error getting ID")
             }
         }
     }
+
+    class NewPlayerConnected(val player: Player, val tick: Int)
 
     private fun onPlayerDisconnected() = with(socket) {
         on(ON_PLAYER_DISCONNECTED) { args ->

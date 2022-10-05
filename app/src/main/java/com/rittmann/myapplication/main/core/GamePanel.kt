@@ -11,6 +11,7 @@ import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.match.MatchEvents
 import com.rittmann.myapplication.main.scene.SceneManager
 import com.rittmann.myapplication.main.entity.server.WorldState
+import com.rittmann.myapplication.main.server.ConnectionControlListeners
 
 class GamePanel(
     context: Context,
@@ -67,7 +68,7 @@ class GamePanel(
         sceneManager.ownPlayerCreated(player)
     }
 
-    fun newPlayerConnected(player: Player) {
+    fun newPlayerConnected(player: ConnectionControlListeners.NewPlayerConnected) {
         sceneManager.newPlayerConnected(player)
     }
 
@@ -83,7 +84,7 @@ class GamePanel(
         return sceneManager.getPlayer()
     }
 
-    fun getEnemies(): List< Player> {
+    fun getEnemies(): List<Player> {
         return sceneManager.getEnemies()
     }
 

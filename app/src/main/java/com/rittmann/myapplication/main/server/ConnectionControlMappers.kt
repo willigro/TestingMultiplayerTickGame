@@ -83,6 +83,7 @@ fun JSONObject.mapToWorldUpdate(): WorldState {
     }
 
     return WorldState(
+        tick = this.getInt("tick"),
         playerUpdate = PlayerUpdate(players = players),
         bulletUpdate = BulletUpdate(bullets = bullets),
     )

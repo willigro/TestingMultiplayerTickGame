@@ -8,7 +8,7 @@ import com.rittmann.myapplication.main.entity.server.WorldState
 
 // TODO organize by server and interface
 interface Scene {
-    fun update(deltaTime: Double)
+    fun update(deltaTime: Double, tick: Int)
     fun draw(canvas: Canvas)
     fun terminate()
     fun receiveTouch(motionEvent: MotionEvent)
@@ -18,6 +18,6 @@ interface Scene {
     fun getPlayer(): Player?
     fun onJoystickMovementChanged(angle: Double, strength: Double)
     fun onJoystickAimChanged(angle: Double, strength: Double)
-    fun onPlayerUpdate(worldState: WorldState)
+    fun onPlayerUpdate(worldState: WorldState, deltaTime: Double)
     fun getEnemies(): List<Player>
 }

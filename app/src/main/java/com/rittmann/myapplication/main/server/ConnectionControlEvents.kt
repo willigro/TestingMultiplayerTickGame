@@ -6,7 +6,7 @@ import com.rittmann.myapplication.main.entity.server.WorldState
 interface ConnectionControlEvents {
     fun logCallback(log: String)
     fun connectionCreated(player: Player)
-    fun newPlayerConnected(player: Player)
+    fun newPlayerConnected(player: ConnectionControlListeners.NewPlayerConnected)
     fun playerDisconnected(id: String)
     fun onPlayerUpdate(worldState: WorldState)
 }

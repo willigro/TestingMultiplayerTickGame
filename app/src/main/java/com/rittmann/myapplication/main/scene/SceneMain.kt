@@ -27,7 +27,7 @@ class SceneMain(
     private var joystickMovement: Joystick = Joystick()
     private var joystickAim: Joystick = Joystick()
 
-    override fun update(deltaTime: Double) {
+    override fun update(deltaTime: Double, tick: Int) {
 //        deltaTime.toString().log()
         player?.also { player ->
             if (joystickMovement.isWorking) {
@@ -60,7 +60,7 @@ class SceneMain(
 
             GlobalCollisions.verifyCollisions()
         }
-        updateBullets(deltaTime)
+        updateBullets(deltaTime, tick)
     }
 
     override fun draw(canvas: Canvas) {
@@ -110,10 +110,22 @@ class SceneMain(
     }
 
     // Improve it later
-    override fun onPlayerUpdate(worldState: WorldState) {
+    override fun onPlayerUpdate(worldState: WorldState, deltaTime: Double) {
         worldState.playerUpdate.players.forEach { playerServer ->
             if (playerServer.id == player?.playerId) {
-                player?.keepTheNextPlayerMovement(playerServer)
+//                player?.keepTheNextPlayerMovement(playerServer)
+
+
+                player?.move(
+                    deltaTime, // forcing a set
+                    playerServer.playerMovement.angle,
+                    playerServer.playerMovement.strength,
+//                    playerServer.playerMovement.position,
+                )
+
+                player?.aim(
+                    playerServer.playerAim.angle,
+                )
             } else {
                 val enemy = enemies.firstOrNull { it.playerId == playerServer.id }
 
@@ -121,7 +133,7 @@ class SceneMain(
             }
         }
 
-        worldState.bulletUpdate.bullets.forEach { bullet ->
+        worldState.bulletUpdate?.bullets?.forEach { bullet ->
             var localBullet: Bullet? = null
             for (i in 0 until _bulletTest.size) {
                 if (_bulletTest[i].bulletId == bullet.bulletId) {
@@ -157,7 +169,7 @@ class SceneMain(
     }
 
 
-    private fun updateBullets(deltaTime: Double) {
+    private fun updateBullets(deltaTime: Double, tick: Int) {
         val bulletIterator = _bulletTest.iterator()
 
         while (bulletIterator.hasNext()) {

@@ -12,12 +12,11 @@ import com.rittmann.myapplication.main.components.JoystickView
 import com.rittmann.myapplication.main.core.GamePanel
 import com.rittmann.myapplication.main.entity.Bullet
 import com.rittmann.myapplication.main.entity.Player
-import com.rittmann.myapplication.main.entity.server.PlayerAimEmit
-import com.rittmann.myapplication.main.entity.server.PlayerMovementEmit
 import com.rittmann.myapplication.main.entity.server.WorldState
 import com.rittmann.myapplication.main.match.MatchEvents
 import com.rittmann.myapplication.main.server.ConnectionControl
 import com.rittmann.myapplication.main.server.ConnectionControlEvents
+import com.rittmann.myapplication.main.server.ConnectionControlListeners
 import com.rittmann.myapplication.main.utils.Logger
 
 const val GLOBAL_TAG = "TAGGING"
@@ -117,7 +116,7 @@ class MatchActivity : AppCompatActivity(), ConnectionControlEvents, MatchEvents,
         gamePanel?.ownPlayerCreated(player)
     }
 
-    override fun newPlayerConnected(player: Player) {
+    override fun newPlayerConnected(player: ConnectionControlListeners.NewPlayerConnected) {
         gamePanel?.newPlayerConnected(player)
     }
 
@@ -133,25 +132,8 @@ class MatchActivity : AppCompatActivity(), ConnectionControlEvents, MatchEvents,
         matchController.shoot(bullet)
     }
 
-    override fun update(deltaTime: Double) {
-        gamePanel?.apply {
-            getPlayer()?.position?.also { position ->
-//                position.toString().log()
-                matchController.update(
-                    playerMovementEmit = PlayerMovementEmit(
-                        position = position,
-                        angle = joystickLeft.angle,
-                        strength = joystickLeft.strength,
-                        velocity = Player.VELOCITY,
-                    ),
-
-                    playerAimEmit = PlayerAimEmit(
-                        angle = joystickRight.angle,
-                        strength = joystickRight.strength,
-                    )
-                )
-            }
-        }
+    override fun sendTheUpdatedState(deltaTime: Double, tick: Int, worldState: WorldState?) {
+        worldState?.also { matchController.update(it) }
     }
 
     override fun draw() {
