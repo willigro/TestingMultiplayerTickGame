@@ -18,6 +18,6 @@ interface Scene {
     fun getPlayer(): Player?
     fun onJoystickMovementChanged(angle: Double, strength: Double)
     fun onJoystickAimChanged(angle: Double, strength: Double)
-    fun onPlayerUpdate(worldState: WorldState, deltaTime: Double, force: Boolean = false)
+    fun onWorldUpdated(worldState: WorldState, deltaTime: Double, force: Boolean = false)
     fun getEnemies(): List<Player>
 }

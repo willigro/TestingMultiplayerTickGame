@@ -71,6 +71,16 @@ class SceneManager(
     }
 
     fun ownPlayerCreated(player: Player) {
+        currentTick.toString().log()
+        if (player.playerId == getPlayer()?.playerId) {
+            timer = 0.0
+            currentTick = 0
+            clientTickNumber = 0
+            clientLastReceivedStateTick = 0
+            clientStateMessages.clear()
+            serverInputMessages.inputs.clear()
+        }
+
         scene.ownPlayerCreated(player)
     }
 
@@ -139,7 +149,7 @@ class SceneManager(
                 "Correcting for error at tick ${stateMsg.tick} clientTickNumber=$clientTickNumber (rewinding ${(clientTickNumber - stateMsg.tick)} ticks) positionError=$positionError serverPosition=${serverPosition} clientPastPosition=${clientPastPosition}".log()
 
                 // Replay, it will force the world state to be equals to the server
-                scene.onPlayerUpdate(stateMsg, deltaTime, true)
+                scene.onWorldUpdated(stateMsg, deltaTime, true)
 
                 // Rewind, it will process the world starting of the server data, so
                 // the world will be equals or at least it will looks like with the server data
@@ -152,7 +162,7 @@ class SceneManager(
                     val input = this.clientInputBuffer[bufferSlot]
 
                     // Reprocess the data
-                    input?.let { scene.onPlayerUpdate(input, deltaTime) }
+                    input?.let { scene.onWorldUpdated(input, deltaTime) }
 
                     // Store the new world state
                     this.clientStateBuffer[bufferSlot] = createCurrentWorldState(rewindTickNumber)
@@ -178,7 +188,7 @@ class SceneManager(
         this.clientInputBuffer[bufferSlot] = currentInputs
 
         // Get the current inputs and process the world
-        currentInputs?.let { scene.onPlayerUpdate(it, deltaTime) }
+        currentInputs?.let { scene.onWorldUpdated(it, deltaTime) }
 
         // Store the current world state processed that used the current inputs
         this.clientStateBuffer[bufferSlot] = createCurrentWorldState(clientTickNumber)
