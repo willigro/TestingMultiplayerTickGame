@@ -62,7 +62,7 @@ class SceneManager(
         buildTheInputPackageAndSendToTheServer(deltaTime)
 
         // When there is data received from the server, process it to try the server reconciliation
-        processThePackgeReceivedFromTheServerReconciliatingTheData(deltaTime)
+        processThePackageReceivedFromTheServerAndReconcileTheData(deltaTime)
     }
 
     fun draw(canvas: Canvas) {
@@ -103,7 +103,7 @@ class SceneManager(
         return scene.getEnemies()
     }
 
-    private fun processThePackgeReceivedFromTheServerReconciliatingTheData(deltaTime: Double) {
+    private fun processThePackageReceivedFromTheServerAndReconcileTheData(deltaTime: Double) {
         // Check if there is new messages
         if (clientStateMessages.size > 0) {
             // Use the newer message
@@ -203,6 +203,12 @@ class SceneManager(
         this.clientTickNumber++
     }
 
+    /**
+     * TODO: at this moment I'm creating the current state to get both the inputs and the results
+     *  By what I was seeing, I guess that the joysticks values are the only data that I need to
+     *  represent the inputs, so I need to create a new method and a new object representing them
+     *  of course I'll need to change the server, by the way, I'm going to let at this way for a while
+     * */
     private fun createCurrentWorldState(tick: Int): WorldState? {
         return getPlayer()?.let { player ->
             val playerMovementEmit = PlayerMovement(
