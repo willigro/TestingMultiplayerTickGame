@@ -38,8 +38,8 @@ class SceneManager(
     private val clientInputBuffer: Array<WorldState?> = Array(BUFFER_SIZE) { null }
 
     //    private val clientStateMsgs: Queue<WorldState> = LinkedList()
-    private val clientStateMsgs: Queue<WorldState> = LinkedList()
-    private var serverInputMsgs = InputWorldState()
+    private val clientStateMessages: Queue<WorldState> = LinkedList()
+    private var serverInputMessages = InputWorldState()
 
     data class InputWorldState(
         val inputs: ArrayList<WorldState?> = arrayListOf(),
@@ -55,104 +55,14 @@ class SceneManager(
     }
 
     fun update(deltaTime: Double) {
-
-        var bufferSlot = clientTickNumber % BUFFER_SIZE
-
-        // sample and store inputs for this tick
-        val currentInputs = createCurrentWorldState(clientTickNumber)
-        this.clientInputBuffer[bufferSlot] = currentInputs
-
-        // store state for this tick, then use current state + input to step simulation
-        currentInputs?.let { scene.onPlayerUpdate(it, deltaTime) }
-
-        this.clientStateBuffer[bufferSlot] = createCurrentWorldState(clientTickNumber)
+        // Get the input data and process it (update the world)
+        processTheCurrentInputAndRunTheWorldUsingThem(deltaTime)
 
         // send input packet to server
-        val startTickNumber = this.clientLastReceivedStateTick
+        buildTheInputPackageAndSendToTheServer(deltaTime)
 
-        for (tick in startTickNumber until clientTickNumber) {
-            this.serverInputMsgs.inputs.add(this.clientInputBuffer[tick % cClientBufferSize])
-        }
-
-        this.serverInputMsgs.start_tick_number = startTickNumber
-
-        timer += deltaTime
-        if (timer >= minTimeBetweenTicks) {
-            matchEvents.sendTheUpdatedState(this.serverInputMsgs.copy())
-            serverInputMsgs.inputs.clear()
-            serverInputMsgs = InputWorldState()
-        }
-
-        this.clientTickNumber++
-
-        if (clientStateMsgs.size > 0) {
-            // make sure if there are any newer state messages available, we use those instead
-            val stateMsg = this.clientStateMsgs.last()
-            this.clientStateMsgs.clear()
-
-            this.clientLastReceivedStateTick = stateMsg.tick
-
-            bufferSlot = stateMsg.tick % cClientBufferSize
-
-            val serverPosition =
-                stateMsg.playerUpdate.players.firstOrNull()?.playerMovement?.position ?: Position()
-
-            val clientPastPosition =
-                this.clientStateBuffer[bufferSlot]?.playerUpdate?.players?.firstOrNull()?.playerMovement?.position
-                    ?: Position()
-
-            val positionError = serverPosition.distance(clientPastPosition)
-
-            if (positionError > 0.001) {
-                "Correcting for error at tick ${stateMsg.tick} clientTickNumber=$clientTickNumber (rewinding ${(clientTickNumber - stateMsg.tick)} ticks) positionError=$positionError serverPosition=${serverPosition} clientPastPosition=${clientPastPosition}".log()
-
-                // rewind & replay
-                scene.onPlayerUpdate(stateMsg, deltaTime, true)
-
-                var rewindTickNumber = stateMsg.tick
-                while (rewindTickNumber < clientTickNumber) {
-                    bufferSlot = rewindTickNumber % cClientBufferSize
-
-                    val input = this.clientInputBuffer[bufferSlot]
-
-                    input?.let { scene.onPlayerUpdate(input, deltaTime) }
-
-                    this.clientStateBuffer[bufferSlot] = input
-
-                    rewindTickNumber++
-                }
-            }
-        }
-    }
-
-    private fun createCurrentWorldState(tick: Int): WorldState? {
-        return getPlayer()?.let { player ->
-            val playerMovementEmit = PlayerMovement(
-                position = player.position,
-                angle = joystickLeft.angle,
-                strength = joystickLeft.strength,
-                velocity = Player.VELOCITY,
-            )
-
-            val playerAimEmit = PlayerAim(
-                angle = joystickRight.angle,
-                strength = joystickRight.strength,
-            )
-
-            return WorldState(
-                tick = tick,
-                bulletUpdate = null,
-                playerUpdate = PlayerUpdate(
-                    players = arrayListOf(
-                        PlayerServer(
-                            id = player.playerId,
-                            playerMovement = playerMovementEmit,
-                            playerAim = playerAimEmit,
-                        )
-                    )
-                )
-            )
-        }
+        // When there is data received from the server, process it to try the server reconciliation
+        processThePackgeReceivedFromTheServerReconciliatingTheData(deltaTime)
     }
 
     fun draw(canvas: Canvas) {
@@ -186,10 +96,140 @@ class SceneManager(
     }
 
     fun onPlayerUpdate(worldState: List<WorldState>) {
-        clientStateMsgs.addAll(worldState)
+        clientStateMessages.addAll(worldState)
     }
 
     fun getEnemies(): List<Player> {
         return scene.getEnemies()
+    }
+
+    private fun processThePackgeReceivedFromTheServerReconciliatingTheData(deltaTime: Double) {
+        // Check if there is new messages
+        if (clientStateMessages.size > 0) {
+            // Use the newer message
+            val stateMsg = this.clientStateMessages.last()
+
+            // Clear the list since we don't need to handle it at the next update
+            this.clientStateMessages.clear()
+
+            // Store the message tick
+            this.clientLastReceivedStateTick = stateMsg.tick
+
+            // Get the buffer slot meant to the server message
+            // It can be (at least must be) a value in the past, it will be a bufferSlot previous to the
+            // current bufferSlot processed at this update
+            var bufferSlot = stateMsg.tick % cClientBufferSize
+
+            // Check if there is some inconsistency on the data, to do so get the server data
+            // TODO: using only the first player position because I'm testing the change position
+            //  using only one player connected
+            val serverPosition =
+                stateMsg.playerUpdate.players.firstOrNull()?.playerMovement?.position ?: Position()
+
+            // Get the client data
+            val clientPastPosition =
+                this.clientStateBuffer[bufferSlot]?.playerUpdate?.players?.firstOrNull()?.playerMovement?.position
+                    ?: Position()
+
+            // Calculate the position error
+            val positionError = serverPosition.distance(clientPastPosition)
+
+            // If there is error, try the reconciliation
+            if (positionError > 0.001) {
+                "Correcting for error at tick ${stateMsg.tick} clientTickNumber=$clientTickNumber (rewinding ${(clientTickNumber - stateMsg.tick)} ticks) positionError=$positionError serverPosition=${serverPosition} clientPastPosition=${clientPastPosition}".log()
+
+                // Replay, it will force the world state to be equals to the server
+                scene.onPlayerUpdate(stateMsg, deltaTime, true)
+
+                // Rewind, it will process the world starting of the server data, so
+                // the world will be equals or at least it will looks like with the server data
+                var rewindTickNumber = stateMsg.tick
+                while (rewindTickNumber < clientTickNumber) {
+                    // Buffer slot to rewind
+                    bufferSlot = rewindTickNumber % cClientBufferSize
+
+                    // Input that was processed at this slot
+                    val input = this.clientInputBuffer[bufferSlot]
+
+                    // Reprocess the data
+                    input?.let { scene.onPlayerUpdate(input, deltaTime) }
+
+                    // Store the new world state
+                    this.clientStateBuffer[bufferSlot] = createCurrentWorldState(rewindTickNumber)
+
+                    rewindTickNumber++
+                }
+            }
+        }
+    }
+
+    private fun processTheCurrentInputAndRunTheWorldUsingThem(deltaTime: Double) {
+        // Get the current tick base on the currentTick
+        val bufferSlot = clientTickNumber % BUFFER_SIZE
+
+        // Get the current data from the world, it will represents the current INPUT
+        // since it was not processed it, such as the ANGLES that are importants to move the objects
+        // TODO: since I need only the angle and strength to move (the mutable variable that the
+        //  movement depends on) I can get the joysticks values and create a new object to be the
+        //  inputs object, it will reduce the amount of data
+        val currentInputs = createCurrentWorldState(clientTickNumber)
+
+        // Store the current inputs according of the current bufferSlot
+        this.clientInputBuffer[bufferSlot] = currentInputs
+
+        // Get the current inputs and process the world
+        currentInputs?.let { scene.onPlayerUpdate(it, deltaTime) }
+
+        // Store the current world state processed that used the current inputs
+        this.clientStateBuffer[bufferSlot] = createCurrentWorldState(clientTickNumber)
+    }
+
+    private fun buildTheInputPackageAndSendToTheServer(deltaTime: Double) {
+        val startTickNumber = this.clientLastReceivedStateTick
+
+        for (tick in startTickNumber until clientTickNumber) {
+            this.serverInputMessages.inputs.add(this.clientInputBuffer[tick % cClientBufferSize])
+        }
+
+        this.serverInputMessages.start_tick_number = startTickNumber
+
+        timer += deltaTime
+        if (timer >= minTimeBetweenTicks) {
+            matchEvents.sendTheUpdatedState(this.serverInputMessages.copy())
+            serverInputMessages.inputs.clear()
+            serverInputMessages = InputWorldState()
+        }
+
+        this.clientTickNumber++
+    }
+
+    private fun createCurrentWorldState(tick: Int): WorldState? {
+        return getPlayer()?.let { player ->
+            val playerMovementEmit = PlayerMovement(
+                position = player.position,
+                angle = joystickLeft.angle,
+                strength = joystickLeft.strength,
+                velocity = Player.VELOCITY,
+            )
+
+            val playerAimEmit = PlayerAim(
+                angle = joystickRight.angle,
+                strength = joystickRight.strength,
+            )
+
+            return WorldState(
+                tick = tick,
+                bulletUpdate = null,
+                playerUpdate = PlayerUpdate(
+                    players = arrayListOf(
+                        PlayerServer(
+                            id = player.playerId,
+                            playerMovement = playerMovementEmit,
+                            playerAim = playerAimEmit,
+                        )
+                    )
+                )
+            )
+        }
     }
 }
