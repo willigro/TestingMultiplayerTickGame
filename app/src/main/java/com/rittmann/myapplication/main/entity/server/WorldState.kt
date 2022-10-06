@@ -84,6 +84,12 @@ data class PlayerServer(
     val id: String,
     val playerMovement: PlayerMovement,
     val playerAim: PlayerAim,
+    val playerGunPointer: PlayerGunPointer,
+)
+
+data class PlayerGunPointer(
+    val position: Position,
+    val angle: Double,
 )
 
 data class PlayerAim(

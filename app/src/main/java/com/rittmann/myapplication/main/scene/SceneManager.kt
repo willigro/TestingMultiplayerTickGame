@@ -6,6 +6,7 @@ import com.rittmann.myapplication.main.components.Joystick
 import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.Position
 import com.rittmann.myapplication.main.entity.server.PlayerAim
+import com.rittmann.myapplication.main.entity.server.PlayerGunPointer
 import com.rittmann.myapplication.main.entity.server.PlayerMovement
 import com.rittmann.myapplication.main.entity.server.PlayerServer
 import com.rittmann.myapplication.main.entity.server.PlayerUpdate
@@ -233,6 +234,12 @@ class SceneManager(
                 strength = joystickRight.strength,
             )
 
+            val pointer = player.getMainGunPointer()
+            val playerGunPointer = PlayerGunPointer(
+                position = pointer.position,
+                angle = pointer.rotationAngle
+            )
+
             return WorldState(
                 tick = tick,
                 bulletUpdate = null,
@@ -242,6 +249,7 @@ class SceneManager(
                             id = player.playerId,
                             playerMovement = playerMovementEmit,
                             playerAim = playerAimEmit,
+                            playerGunPointer = playerGunPointer,
                         )
                     )
                 )

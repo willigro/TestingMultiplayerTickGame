@@ -5,6 +5,7 @@ import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.Position
 import com.rittmann.myapplication.main.entity.server.BulletUpdate
 import com.rittmann.myapplication.main.entity.server.PlayerAim
+import com.rittmann.myapplication.main.entity.server.PlayerGunPointer
 import com.rittmann.myapplication.main.entity.server.PlayerMovement
 import com.rittmann.myapplication.main.entity.server.PlayerServer
 import com.rittmann.myapplication.main.entity.server.PlayerUpdate
@@ -35,6 +36,7 @@ fun JSONObject.mapToWorldUpdate(): WorldState {
 
         val playerMovementResultJson = playerJson.getJSONObject(DATA_PLAYER_MOVEMENT)
         val playerAimResultJson = playerJson.getJSONObject(DATA_PLAYER_AIM)
+        val playerGunPointerJson = playerJson.getJSONObject("playerGunPointer")
 
         val positionJson = playerMovementResultJson.getJSONObject(DATA_PLAYER_POSITION)
 
@@ -53,7 +55,14 @@ fun JSONObject.mapToWorldUpdate(): WorldState {
                 playerAim = PlayerAim(
                     angle = playerAimResultJson.getDouble(DATA_PLAYER_MOVEMENT_ANGLE),
                     strength = playerAimResultJson.getDouble(DATA_PLAYER_MOVEMENT_STRENGTH),
-                )
+                ),
+                playerGunPointer = PlayerGunPointer(
+                    position = Position(
+                        x = playerGunPointerJson.getDouble(DATA_PLAYER_POSITION_X),
+                        y = playerGunPointerJson.getDouble(DATA_PLAYER_POSITION_Y),
+                    ),
+                    angle = playerGunPointerJson.getDouble(DATA_PLAYER_MOVEMENT_ANGLE),
+                ),
             )
         )
     }
