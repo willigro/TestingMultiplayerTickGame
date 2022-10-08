@@ -13,6 +13,7 @@ import com.rittmann.myapplication.main.entity.server.PlayerUpdate
 import com.rittmann.myapplication.main.entity.server.WorldState
 import com.rittmann.myapplication.main.match.MatchEvents
 import com.rittmann.myapplication.main.server.ConnectionControlListeners
+import com.rittmann.myapplication.main.utils.INVALID_ID
 import com.rittmann.myapplication.main.utils.Logger
 import java.util.*
 import kotlin.collections.ArrayList
@@ -20,6 +21,7 @@ import kotlin.collections.ArrayList
 // KEEP IT EQUALS TO THE SERVER
 private const val SERVER_TICK_RATE = 2
 private const val BUFFER_SIZE = 1024
+private const val ERROR_POSITION_FACTOR = 0.001
 
 class SceneManager(
     private val matchEvents: MatchEvents,
@@ -56,6 +58,7 @@ class SceneManager(
     }
 
     fun update(deltaTime: Double) {
+//        "update".log()
         // Get the input data and process it (update the world)
         processTheCurrentInputAndRunTheWorldUsingThem(deltaTime)
 
@@ -108,53 +111,32 @@ class SceneManager(
 
     fun onPlayerUpdate(worldState: List<WorldState>) {
         clientStateMessages.addAll(worldState)
+//        "verifyAllMessagesAndReplayIfNeeds clientStateMessages.size=${clientStateMessages.size}".log()
     }
 
     fun getEnemies(): List<Player> {
         return scene.getEnemies()
     }
 
+    // TODO: as I wanna to read all messages I'm going to:
+    //  Go to the old message, minor tick, it should be the the first item since it is a queue
+    //  Go through all and replace the client ticks
+    //  When reach to the newer message continue doing as it is already doing, it means that I'll do the rewind
     private fun processThePackageReceivedFromTheServerAndReconcileTheData(deltaTime: Double) {
         // Check if there is new messages
         if (clientStateMessages.size > 0) {
             // Use the newer message
-            val stateMsg = this.clientStateMessages.last()
+            // TODO: IT WON'T WORK FOR ME!! some messages must be read but it will be lost inside the package
+            //  because it will gone faster then the server can notify
+            //  example: if I shoot a near enemy the bullet will travel for few ticks and the collision
+            //           will be lost in case of it isn't the last message, so I need to READ ALL
 
-            // Clear the list since we don't need to handle it at the next update
-            this.clientStateMessages.clear()
+            var bufferSlot: Int
 
-            // Store the message tick
-            this.clientLastReceivedStateTick = stateMsg.tick
+            var rewindTickNumber = verifyAllMessagesAndReplayIfNeeds(deltaTime)
 
-            // Get the buffer slot meant to the server message
-            // It can be (at least must be) a value in the past, it will be a bufferSlot previous to the
-            // current bufferSlot processed at this update
-            var bufferSlot = stateMsg.tick % cClientBufferSize
-
-            // Check if there is some inconsistency on the data, to do so get the server data
-            // TODO: using only the first player position because I'm testing the change position
-            //  using only one player connected
-            val serverPosition =
-                stateMsg.playerUpdate.players.firstOrNull()?.playerMovement?.position ?: Position()
-
-            // Get the client data
-            val clientPastPosition =
-                this.clientStateBuffer[bufferSlot]?.playerUpdate?.players?.firstOrNull()?.playerMovement?.position
-                    ?: Position()
-
-            // Calculate the position error
-            val positionError = serverPosition.distance(clientPastPosition)
-
-            // If there is error, try the reconciliation
-            if (positionError > 0.001) {
-                "Correcting for error at tick ${stateMsg.tick} clientTickNumber=$clientTickNumber (rewinding ${(clientTickNumber - stateMsg.tick)} ticks) positionError=$positionError serverPosition=${serverPosition} clientPastPosition=${clientPastPosition}".log()
-
-                // Replay, it will force the world state to be equals to the server
-                scene.onWorldUpdated(stateMsg, deltaTime, true)
-
-                // Rewind, it will process the world starting of the server data, so
-                // the world will be equals or at least it will looks like with the server data
-                var rewindTickNumber = stateMsg.tick
+            // If some state was changed, do the rewind
+            if (rewindTickNumber != INVALID_ID) {
                 while (rewindTickNumber < clientTickNumber) {
                     // Buffer slot to rewind
                     bufferSlot = rewindTickNumber % cClientBufferSize
@@ -172,6 +154,59 @@ class SceneManager(
                 }
             }
         }
+    }
+
+    private fun verifyAllMessagesAndReplayIfNeeds(deltaTime: Double): Int {
+        var lastTick = INVALID_ID
+//        "verifyAllMessagesAndReplayIfNeeds clientStateMessages.size=${clientStateMessages.size}".log()
+        // Do it for all
+        while (clientStateMessages.size > 0) {
+            // Get the first message and delete it from the queue
+            val stateMsg = this.clientStateMessages.remove()
+
+//            "has bullets=${stateMsg.bulletUpdate?.bullets?.size}, clientStateMessages.size=${clientStateMessages.size}".log()
+
+            // Get the tick to retrieve if it is the last one
+            lastTick = stateMsg.tick
+
+            // When it is the last item, save the tick
+            if (clientStateMessages.size == 1) {
+                // Store the message tick
+                this.clientLastReceivedStateTick = stateMsg.tick
+            }
+
+            // Get the buffer slot meant to the server message
+            // It can be (at least must be) a value in the past, it will be a bufferSlot previous to the
+            // current bufferSlot processed at this update
+            val bufferSlot = stateMsg.tick % cClientBufferSize
+
+            // Check if there is some inconsistency on the data, to do so get the server data
+            // TODO: using only the first player position because I'm testing the change position
+            //  using only one player connected
+            val serverPosition =
+                stateMsg.playerUpdate.players.firstOrNull()?.playerMovement?.position ?: Position()
+
+            // Get the client data
+            val clientPastPosition =
+                this.clientStateBuffer[bufferSlot]?.playerUpdate?.players?.firstOrNull()?.playerMovement?.position
+                    ?: Position()
+
+            // Calculate the position error
+            val positionError = serverPosition.distance(clientPastPosition)
+
+            // TODO: improve this code, I need do to less checks, and maybe update only what is necessary
+            //  instead of passing everything
+            // I'm letting this bullet check because if there is a bullet I need to update because the bullet
+            // is updated for the server
+            if (positionError > ERROR_POSITION_FACTOR || (stateMsg.bulletUpdate?.bullets?.size ?: 0) > 0) {
+                "Correcting for error at tick ${stateMsg.tick} clientTickNumber=$clientTickNumber (rewinding ${(clientTickNumber - stateMsg.tick)} ticks) positionError=$positionError serverPosition=${serverPosition} clientPastPosition=${clientPastPosition}".log()
+
+                // Replay, it will force the world state to be equals to the server
+                scene.onWorldUpdated(stateMsg, deltaTime, true)
+            }
+        }
+
+        return lastTick
     }
 
     private fun processTheCurrentInputAndRunTheWorldUsingThem(deltaTime: Double) {
@@ -236,9 +271,13 @@ class SceneManager(
 
             val pointer = player.getMainGunPointer()
             val playerGunPointer = PlayerGunPointer(
-                position = pointer.position,
-                angle = pointer.rotationAngle
+                position = pointer.getRotatedPosition(joystickRight.angle),
+                angle = joystickRight.angle
             )
+
+//            if (joystickRight.strength > 80.0){
+//                "pointerPosition=${pointer.getRotatedPosition()}, pointer.angle=${pointer.rotationAngle}, joystickRight.angle=${joystickRight.angle}".log()
+//            }
 
             return WorldState(
                 tick = tick,

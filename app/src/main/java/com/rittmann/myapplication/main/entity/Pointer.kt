@@ -54,20 +54,17 @@ class Pointer(
     }
 
     private fun rotate() {
-        val normalizedPosition = Position.calculateNormalizedPosition(
-            rotationAngle
-        )
-
-        position.sumNew(normalizedPosition.multiple(distanceX, distanceY)).apply {
+        getRotatedPosition().apply {
             rect.setByPosition(this.x, this.y, width, height)
         }
     }
 
-    fun getRotatedPosition(): Position {
+    fun getRotatedPosition(angle: Double? = null): Position {
+        angle?.also { setRotation(angle) }
         val normalizedPosition = Position.calculateNormalizedPosition(
             rotationAngle
         )
 
-        return position.sumNew(normalizedPosition.multiple(BODY_WIDTH.toDouble()))
+        return position.sumNew(normalizedPosition.multiple(distanceX, distanceY))
     }
 }

@@ -1,5 +1,6 @@
 package com.rittmann.myapplication.main.server
 
+import android.util.Log
 import com.rittmann.myapplication.main.entity.Bullet
 import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.Position
@@ -10,6 +11,7 @@ import com.rittmann.myapplication.main.entity.server.PlayerMovement
 import com.rittmann.myapplication.main.entity.server.PlayerServer
 import com.rittmann.myapplication.main.entity.server.PlayerUpdate
 import com.rittmann.myapplication.main.entity.server.WorldState
+import com.rittmann.myapplication.main.match.screen.GLOBAL_TAG
 import org.json.JSONObject
 
 fun JSONObject.mapToPlayer(): Player {
@@ -37,6 +39,7 @@ fun JSONObject.mapToWorldUpdate(): WorldState {
         val playerMovementResultJson = playerJson.getJSONObject(DATA_PLAYER_MOVEMENT)
         val playerAimResultJson = playerJson.getJSONObject(DATA_PLAYER_AIM)
         val playerGunPointerJson = playerJson.getJSONObject("playerGunPointer")
+        val playerGunPointerPositionJson = playerGunPointerJson.getJSONObject("position")
 
         val positionJson = playerMovementResultJson.getJSONObject(DATA_PLAYER_POSITION)
 
@@ -58,8 +61,8 @@ fun JSONObject.mapToWorldUpdate(): WorldState {
                 ),
                 playerGunPointer = PlayerGunPointer(
                     position = Position(
-                        x = playerGunPointerJson.getDouble(DATA_PLAYER_POSITION_X),
-                        y = playerGunPointerJson.getDouble(DATA_PLAYER_POSITION_Y),
+                        x = playerGunPointerPositionJson.getDouble(DATA_PLAYER_POSITION_X),
+                        y = playerGunPointerPositionJson.getDouble(DATA_PLAYER_POSITION_Y),
                     ),
                     angle = playerGunPointerJson.getDouble(DATA_PLAYER_MOVEMENT_ANGLE),
                 ),
@@ -90,6 +93,12 @@ fun JSONObject.mapToWorldUpdate(): WorldState {
             }
         )
     }
+
+//    if (bullets.size > 0) {
+//        Log.i(GLOBAL_TAG, "tick=${this.getInt("tick")} bullet=${bullets.size}")
+//    }
+
+//    Log.i(GLOBAL_TAG, "bullets.size=${bullets.size}")
 
     return WorldState(
         tick = this.getInt("tick"),

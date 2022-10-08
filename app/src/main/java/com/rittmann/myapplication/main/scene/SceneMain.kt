@@ -4,8 +4,11 @@ import android.graphics.Canvas
 import android.util.Log
 import android.view.MotionEvent
 import com.rittmann.myapplication.main.components.Joystick
+import com.rittmann.myapplication.main.entity.BULLET_DEFAULT_MAX_DISTANCE
+import com.rittmann.myapplication.main.entity.BULLET_DEFAULT_VELOCITY
 import com.rittmann.myapplication.main.entity.Bullet
 import com.rittmann.myapplication.main.entity.Player
+import com.rittmann.myapplication.main.entity.Position
 import com.rittmann.myapplication.main.entity.collisor.GlobalCollisions
 import com.rittmann.myapplication.main.entity.server.PlayerServer
 import com.rittmann.myapplication.main.entity.server.WorldState
@@ -28,38 +31,38 @@ class SceneMain(
     private var joystickAim: Joystick = Joystick()
 
     override fun update(deltaTime: Double, tick: Int) {
-        player?.also { player ->
-            if (joystickMovement.isWorking) {
-                player.move(
-                    deltaTime,
-                    joystickMovement.angle,
-                    joystickMovement.strength,
-                )
-            }
-
-            if (joystickAim.isWorking) {
-                player.aim(
-                    joystickAim.angle,
-                )
-
-                // create a const
-                if (joystickAim.strength > 80f) {
-                    player.shot()?.also { bullet ->
-                        _bulletTest.add(bullet)
-                        matchEvents.shoot(bullet)
-                    }
-                }
-            }
-
-            player.update(deltaTime)
-
-            enemies.forEach {
-                it.update(deltaTime)
-            }
-
-            GlobalCollisions.verifyCollisions()
-        }
-        updateBullets(deltaTime)
+//        player?.also { player ->
+//            if (joystickMovement.isWorking) {
+//                player.move(
+//                    deltaTime,
+//                    joystickMovement.angle,
+//                    joystickMovement.strength,
+//                )
+//            }
+//
+//            if (joystickAim.isWorking) {
+//                player.aim(
+//                    joystickAim.angle,
+//                )
+//
+//                // create a const
+//                if (joystickAim.strength > 80f) {
+//                    player.shoot()?.also { bullet ->
+//                        _bulletTest.add(bullet)
+//                        matchEvents.shoot(bullet)
+//                    }
+//                }
+//            }
+//
+//            player.update(deltaTime)
+//
+//            enemies.forEach {
+//                it.update(deltaTime)
+//            }
+//
+//            GlobalCollisions.verifyCollisions()
+//        }
+//        updateBullets(deltaTime)
     }
 
     override fun draw(canvas: Canvas) {
@@ -116,37 +119,44 @@ class SceneMain(
             }
         }
 
-        updateBullets(deltaTime)
+        worldState.bulletUpdate?.bullets?.also { bullets ->
+            for (bullet in bullets) {
+                // The local bullets are only representative, I don't need to handle it properly for a while
+                // TODO: I guess that if cause a small error the bullet don't collide with the right body
+                //  (colliding on server but does not colliding locale) I will need to check if the bullet is still alive
+                //  for that I'll need the bullet ID
+                if (bullet.ownerId == player?.playerId) {
+                    continue
+                }
 
-//        worldState.bulletUpdate?.bullets?.forEach { bullet ->
-//            var localBullet: Bullet? = null
-//            for (i in 0 until _bulletTest.size) {
-//                if (_bulletTest[i].bulletId == bullet.bulletId) {
-//                    localBullet = _bulletTest[i]
-//                    break
-//                }
-//            }
-//
-//            if (localBullet == null) {
-//                // create a new one
-//                _bulletTest.add(
-//                    Bullet(
-//                        bulletId = bullet.bulletId,
-//                        ownerId = bullet.ownerId,
-//                        position = Position(
-//                            x = bullet.position.x,
-//                            y = bullet.position.y
-//                        ),
-//                        angle = bullet.angle,
-//                        velocity = BULLET_DEFAULT_VELOCITY,
-//                        maxDistance = BULLET_DEFAULT_MAX_DISTANCE,
-//                    )
-//                )
-//            } else {
-//                // update
-//                localBullet.updateValues(bullet)
-//            }
-//        }
+                var found = false
+                for (i in 0 until _bulletTest.size) {
+                    if (_bulletTest[i].bulletId == bullet.bulletId) {
+                        found = true
+                        break
+                    }
+                }
+
+                // create a new one
+                if (found.not()) {
+                    _bulletTest.add(
+                        Bullet(
+                            bulletId = bullet.bulletId,
+                            ownerId = bullet.ownerId,
+                            position = Position(
+                                x = bullet.position.x,
+                                y = bullet.position.y
+                            ),
+                            angle = bullet.angle,
+                            velocity = BULLET_DEFAULT_VELOCITY,
+                            maxDistance = BULLET_DEFAULT_MAX_DISTANCE,
+                        )
+                    )
+                }
+            }
+        }
+
+        updateBullets(deltaTime)
     }
 
     override fun getEnemies(): List<Player> {
@@ -178,7 +188,7 @@ class SceneMain(
             )
 
             if (playerServer.playerAim.strength > MIN_STRENGTH_TO_SHOT) {
-                player.shot()?.also { bullet ->
+                player.shoot()?.also { bullet ->
                     _bulletTest.add(bullet)
                     // matchEvents.shoot(bullet)
                 }
@@ -199,7 +209,7 @@ class SceneMain(
         while (bulletIterator.hasNext()) {
             val currentBullet = bulletIterator.next()
 
-            if (currentBullet.isFree()) {
+            if (currentBullet.isFree(deltaTime)) {
                 currentBullet.free()
                 bulletIterator.remove()
             } else {

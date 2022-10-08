@@ -11,9 +11,9 @@ import com.rittmann.myapplication.main.utils.Logger
 
 private const val BULLET_SIZE = 15
 const val BULLET_DEFAULT_VELOCITY = 500.0
-const val BULLET_DEFAULT_MAX_DISTANCE = 200.0
+const val BULLET_DEFAULT_MAX_DISTANCE = 1000.0
 
-class Bullet(
+data class Bullet(
     val bulletId: String,
     var ownerId: String,
     val position: Position,
@@ -70,7 +70,14 @@ class Bullet(
         }
     }
 
-    fun isFree(): Boolean = initialPosition.distance(position) >= maxDistance
+    fun isFree(deltaTime: Double): Boolean = initialPosition.distance(position).apply {
+//        ("distance=" + this.toString() +
+//                ", initialPosition=" + initialPosition.toString() +
+//                ", position=" + position.toString() +
+//                ", angle=" + angle.toString() +
+//                ", deltaTime=" + deltaTime.toString()
+//                ).log()
+    } >= maxDistance
 
     fun updateValues(bullet: Bullet) {
         position.set(bullet.position)
