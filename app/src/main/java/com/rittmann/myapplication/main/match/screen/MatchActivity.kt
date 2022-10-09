@@ -12,6 +12,7 @@ import com.rittmann.myapplication.main.components.JoystickView
 import com.rittmann.myapplication.main.core.GamePanel
 import com.rittmann.myapplication.main.entity.Bullet
 import com.rittmann.myapplication.main.entity.Player
+import com.rittmann.myapplication.main.entity.server.InputWorldState
 import com.rittmann.myapplication.main.entity.server.WorldState
 import com.rittmann.myapplication.main.match.MatchEvents
 import com.rittmann.myapplication.main.scene.SceneManager
@@ -137,7 +138,7 @@ class MatchActivity : AppCompatActivity(), ConnectionControlEvents, MatchEvents,
         worldState?.also { matchController.update(it) }
     }
 
-    override fun sendTheUpdatedState(inputWorldState: SceneManager.InputWorldState) {
+    override fun sendTheUpdatedState(inputWorldState: InputWorldState) {
         matchController.update(inputWorldState)
     }
 

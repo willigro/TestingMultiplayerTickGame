@@ -9,8 +9,7 @@ import com.rittmann.myapplication.main.entity.BULLET_DEFAULT_VELOCITY
 import com.rittmann.myapplication.main.entity.Bullet
 import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.Position
-import com.rittmann.myapplication.main.entity.collisor.GlobalCollisions
-import com.rittmann.myapplication.main.entity.server.PlayerServer
+import com.rittmann.myapplication.main.entity.server.InputsState
 import com.rittmann.myapplication.main.entity.server.WorldState
 import com.rittmann.myapplication.main.match.MatchEvents
 import com.rittmann.myapplication.main.match.screen.GLOBAL_TAG
@@ -25,53 +24,24 @@ class SceneMain(
 ) : Scene, Logger {
     private var player: Player? = null
     private var enemies: ArrayList<Player> = arrayListOf()
-    private var _bulletTest: ArrayList<Bullet> = arrayListOf()
+    private var _bulletsInGame: ArrayList<Bullet> = arrayListOf()
+    private var _bulletsToSend: ArrayList<Bullet> = arrayListOf()
 
     private var joystickMovement: Joystick = Joystick()
     private var joystickAim: Joystick = Joystick()
 
-    override fun update(deltaTime: Double, tick: Int) {
-//        player?.also { player ->
-//            if (joystickMovement.isWorking) {
-//                player.move(
-//                    deltaTime,
-//                    joystickMovement.angle,
-//                    joystickMovement.strength,
-//                )
-//            }
-//
-//            if (joystickAim.isWorking) {
-//                player.aim(
-//                    joystickAim.angle,
-//                )
-//
-//                // create a const
-//                if (joystickAim.strength > 80f) {
-//                    player.shoot()?.also { bullet ->
-//                        _bulletTest.add(bullet)
-//                        matchEvents.shoot(bullet)
-//                    }
-//                }
-//            }
-//
-//            player.update(deltaTime)
-//
-//            enemies.forEach {
-//                it.update(deltaTime)
-//            }
-//
-//            GlobalCollisions.verifyCollisions()
-//        }
-//        updateBullets(deltaTime)
-    }
+    override fun update(deltaTime: Double, tick: Int) {}
 
     override fun draw(canvas: Canvas) {
         player?.draw(canvas)
         enemies.forEach { it.draw(canvas) }
-        _bulletTest.forEach { it.draw(canvas) }
+        _bulletsInGame.forEach { it.draw(canvas) }
     }
 
-    override fun terminate() {}
+    override fun finishFrame() {
+//        "finishFrame=${_bulletsToSend.size}".log()
+        _bulletsToSend.clear()
+    }
 
     override fun receiveTouch(motionEvent: MotionEvent) {
 
@@ -109,13 +79,33 @@ class SceneMain(
         joystickAim.set(angle, strength)
     }
 
-    // Improve it later
-    override fun onWorldUpdated(worldState: WorldState, deltaTime: Double, force: Boolean) {
+    // It will force a state, used to replay a stat
+    override fun onWorldUpdated(worldState: WorldState, deltaTime: Double) {
         worldState.playerUpdate.players.forEach { playerServer ->
             if (playerServer.id == player?.playerId) {
-                updateHostPlayer(playerServer, deltaTime, force)
+                player?.also { player ->
+                    player.move(
+                        playerServer.playerMovement.angle,
+                        playerServer.playerMovement.strength,
+                        playerServer.playerMovement.position,
+                    )
+
+                    player.aim(
+                        playerServer.playerAim.angle,
+                    )
+
+                    if (playerServer.playerAim.strength > MIN_STRENGTH_TO_SHOT) {
+                        player.shoot()?.also { bullet ->
+                            "creating a bullet".log()
+                            createNewBullet(bullet)
+                        }
+                    }
+                }
             } else {
-                updateEnemies(playerServer, deltaTime, force)
+                // I'm going to use the above move here
+                val enemy = enemies.firstOrNull { it.playerId == playerServer.id }
+
+                enemy?.keepTheNextPlayerMovement(playerServer)
             }
         }
 
@@ -129,9 +119,11 @@ class SceneMain(
                     continue
                 }
 
+                "processing the bullet=$bullet".log()
+
                 var found = false
-                for (i in 0 until _bulletTest.size) {
-                    if (_bulletTest[i].bulletId == bullet.bulletId) {
+                for (i in 0 until _bulletsInGame.size) {
+                    if (_bulletsInGame[i].bulletId == bullet.bulletId) {
                         found = true
                         break
                     }
@@ -139,7 +131,7 @@ class SceneMain(
 
                 // create a new one
                 if (found.not()) {
-                    _bulletTest.add(
+                    _bulletsInGame.add(
                         Bullet(
                             bulletId = bullet.bulletId,
                             ownerId = bullet.ownerId,
@@ -155,6 +147,29 @@ class SceneMain(
                 }
             }
         }
+    }
+
+    // It will run a new state based on the inputs
+    override fun onWorldUpdated(inputsState: InputsState, deltaTime: Double) = with(inputsState) {
+        playerInputsState.playerAimInputsState
+
+        player?.also { player ->
+            player.move(
+                deltaTime,
+                playerInputsState.playerMovementInputsState.angle,
+                playerInputsState.playerMovementInputsState.strength,
+            )
+
+            player.aim(
+                playerInputsState.playerAimInputsState.angle,
+            )
+
+            if (playerInputsState.playerAimInputsState.strength > MIN_STRENGTH_TO_SHOT) {
+                player.shoot()?.also { bullet ->
+                    createNewBullet(bullet)
+                }
+            }
+        }
 
         updateBullets(deltaTime)
     }
@@ -163,48 +178,18 @@ class SceneMain(
         return enemies
     }
 
-    private fun updateHostPlayer(
-        playerServer: PlayerServer,
-        deltaTime: Double,
-        force: Boolean
-    ) {
-        player?.also { player ->
-            if (force) {
-                player.move(
-                    playerServer.playerMovement.angle,
-                    playerServer.playerMovement.strength,
-                    playerServer.playerMovement.position,
-                )
-            } else {
-                player.move(
-                    deltaTime,
-                    playerServer.playerMovement.angle,
-                    playerServer.playerMovement.strength,
-                )
-            }
-
-            player.aim(
-                playerServer.playerAim.angle,
-            )
-
-            if (playerServer.playerAim.strength > MIN_STRENGTH_TO_SHOT) {
-                player.shoot()?.also { bullet ->
-                    _bulletTest.add(bullet)
-                    // matchEvents.shoot(bullet)
-                }
-            }
-        }
+    override fun getBulletsToSend(tick: Int): List<Bullet> {
+//        "getBulletsToSend=${_bulletsToSend.size}".log()
+        return _bulletsToSend
     }
 
-    private fun updateEnemies(playerServer: PlayerServer, deltaTime: Double, force: Boolean) {
-        // I'm going to use the above move here
-        val enemy = enemies.firstOrNull { it.playerId == playerServer.id }
-
-        enemy?.keepTheNextPlayerMovement(playerServer)
+    private fun createNewBullet(bullet: Bullet) {
+        _bulletsInGame.add(bullet)
+        _bulletsToSend.add(bullet.copy())
     }
 
     private fun updateBullets(deltaTime: Double) {
-        val bulletIterator = _bulletTest.iterator()
+        val bulletIterator = _bulletsInGame.iterator()
 
         while (bulletIterator.hasNext()) {
             val currentBullet = bulletIterator.next()

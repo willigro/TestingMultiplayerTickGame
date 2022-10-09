@@ -5,9 +5,17 @@ import android.view.MotionEvent
 import com.rittmann.myapplication.main.components.Joystick
 import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.Position
+import com.rittmann.myapplication.main.entity.server.BulletInputsState
+import com.rittmann.myapplication.main.entity.server.BulletUpdate
+import com.rittmann.myapplication.main.entity.server.InputWorldState
+import com.rittmann.myapplication.main.entity.server.InputsState
 import com.rittmann.myapplication.main.entity.server.PlayerAim
+import com.rittmann.myapplication.main.entity.server.PlayerAimInputsState
+import com.rittmann.myapplication.main.entity.server.PlayerGunInputsState
 import com.rittmann.myapplication.main.entity.server.PlayerGunPointer
+import com.rittmann.myapplication.main.entity.server.PlayerInputsState
 import com.rittmann.myapplication.main.entity.server.PlayerMovement
+import com.rittmann.myapplication.main.entity.server.PlayerMovementInputsState
 import com.rittmann.myapplication.main.entity.server.PlayerServer
 import com.rittmann.myapplication.main.entity.server.PlayerUpdate
 import com.rittmann.myapplication.main.entity.server.WorldState
@@ -16,10 +24,9 @@ import com.rittmann.myapplication.main.server.ConnectionControlListeners
 import com.rittmann.myapplication.main.utils.INVALID_ID
 import com.rittmann.myapplication.main.utils.Logger
 import java.util.*
-import kotlin.collections.ArrayList
 
 // KEEP IT EQUALS TO THE SERVER
-private const val SERVER_TICK_RATE = 2
+private const val SERVER_TICK_RATE = 5
 private const val BUFFER_SIZE = 1024
 private const val ERROR_POSITION_FACTOR = 0.001
 
@@ -38,16 +45,11 @@ class SceneManager(
     private var clientLastReceivedStateTick = 0
     private val cClientBufferSize = 1024
     private val clientStateBuffer: Array<WorldState?> = Array(BUFFER_SIZE) { null }
-    private val clientInputBuffer: Array<WorldState?> = Array(BUFFER_SIZE) { null }
+    private val clientInputBuffer: Array<InputsState?> = Array(BUFFER_SIZE) { null }
 
     //    private val clientStateMsgs: Queue<WorldState> = LinkedList()
     private val clientStateMessages: Queue<WorldState> = LinkedList()
     private var serverInputMessages = InputWorldState()
-
-    data class InputWorldState(
-        val inputs: ArrayList<WorldState?> = arrayListOf(),
-        var start_tick_number: Int = 0,
-    )
 
     init {
         scene = SceneMain(matchEvents)
@@ -58,6 +60,8 @@ class SceneManager(
     }
 
     fun update(deltaTime: Double) {
+        if (getPlayer() == null) return
+
 //        "update".log()
         // Get the input data and process it (update the world)
         processTheCurrentInputAndRunTheWorldUsingThem(deltaTime)
@@ -67,6 +71,9 @@ class SceneManager(
 
         // When there is data received from the server, process it to try the server reconciliation
         processThePackageReceivedFromTheServerAndReconcileTheData(deltaTime)
+
+        // It will refresh and clear the variables and states
+        scene.finishFrame()
     }
 
     fun draw(canvas: Canvas) {
@@ -111,11 +118,58 @@ class SceneManager(
 
     fun onPlayerUpdate(worldState: List<WorldState>) {
         clientStateMessages.addAll(worldState)
-//        "verifyAllMessagesAndReplayIfNeeds clientStateMessages.size=${clientStateMessages.size}".log()
+//        worldState.forEach {
+//            it.bulletUpdate?.bullets?.forEach {
+//                it.position.toString().log()
+//            }
+//        }
     }
 
     fun getEnemies(): List<Player> {
         return scene.getEnemies()
+    }
+
+    private fun processTheCurrentInputAndRunTheWorldUsingThem(deltaTime: Double) {
+        // Get the current tick base on the currentTick
+        val bufferSlot = clientTickNumber % BUFFER_SIZE
+
+        // Get the current data from the world, it will represents the current INPUT
+        // since it was not processed it, such as the ANGLES that are importants to move the objects
+        // TODO: since I need only the angle and strength to move (the mutable variable that the
+        //  movement depends on) I can get the joysticks values and create a new object to be the
+        //  inputs object, it will reduce the amount of data
+        val currentInputs = createCurrentInputsState(clientTickNumber)
+
+        // Get the current inputs and process the world
+        currentInputs?.let { input -> scene.onWorldUpdated(input, deltaTime) }
+
+        // Store the current world state processed that used the current inputs
+        this.clientStateBuffer[bufferSlot] = createCurrentWorldState(clientTickNumber)
+
+        // As the information about the bullet are important to send through the inputs
+        // I'm going to try to get the bullets after the world evaluation, and then store the inputs
+        this.clientInputBuffer[bufferSlot] = currentInputs?.copy(
+            bulletInputsState = createBulletInputsState(currentTick)
+        )
+    }
+
+    private fun buildTheInputPackageAndSendToTheServer(deltaTime: Double) {
+        val startTickNumber = this.clientLastReceivedStateTick
+
+        for (tick in startTickNumber until clientTickNumber) {
+            this.serverInputMessages.inputs.add(this.clientInputBuffer[tick % cClientBufferSize])
+        }
+
+        this.serverInputMessages.start_tick_number = startTickNumber
+
+        timer += deltaTime
+        if (timer >= minTimeBetweenTicks) {
+            matchEvents.sendTheUpdatedState(this.serverInputMessages.copy())
+            serverInputMessages.inputs.clear()
+            serverInputMessages = InputWorldState()
+        }
+
+        this.clientTickNumber++
     }
 
     // TODO: as I wanna to read all messages I'm going to:
@@ -198,55 +252,17 @@ class SceneManager(
             //  instead of passing everything
             // I'm letting this bullet check because if there is a bullet I need to update because the bullet
             // is updated for the server
-            if (positionError > ERROR_POSITION_FACTOR || (stateMsg.bulletUpdate?.bullets?.size ?: 0) > 0) {
-                "Correcting for error at tick ${stateMsg.tick} clientTickNumber=$clientTickNumber (rewinding ${(clientTickNumber - stateMsg.tick)} ticks) positionError=$positionError serverPosition=${serverPosition} clientPastPosition=${clientPastPosition}".log()
+            if (positionError > ERROR_POSITION_FACTOR
+                || (stateMsg.bulletUpdate?.bullets?.size ?: 0) > 0
+            ) {
+//                "Correcting for error at tick ${stateMsg.tick} clientTickNumber=$clientTickNumber (rewinding ${(clientTickNumber - stateMsg.tick)} ticks) positionError=$positionError serverPosition=${serverPosition} clientPastPosition=${clientPastPosition}".log()
 
                 // Replay, it will force the world state to be equals to the server
-                scene.onWorldUpdated(stateMsg, deltaTime, true)
+                scene.onWorldUpdated(stateMsg, deltaTime)
             }
         }
 
         return lastTick
-    }
-
-    private fun processTheCurrentInputAndRunTheWorldUsingThem(deltaTime: Double) {
-        // Get the current tick base on the currentTick
-        val bufferSlot = clientTickNumber % BUFFER_SIZE
-
-        // Get the current data from the world, it will represents the current INPUT
-        // since it was not processed it, such as the ANGLES that are importants to move the objects
-        // TODO: since I need only the angle and strength to move (the mutable variable that the
-        //  movement depends on) I can get the joysticks values and create a new object to be the
-        //  inputs object, it will reduce the amount of data
-        val currentInputs = createCurrentWorldState(clientTickNumber)
-
-        // Store the current inputs according of the current bufferSlot
-        this.clientInputBuffer[bufferSlot] = currentInputs
-
-        // Get the current inputs and process the world
-        currentInputs?.let { scene.onWorldUpdated(it, deltaTime) }
-
-        // Store the current world state processed that used the current inputs
-        this.clientStateBuffer[bufferSlot] = createCurrentWorldState(clientTickNumber)
-    }
-
-    private fun buildTheInputPackageAndSendToTheServer(deltaTime: Double) {
-        val startTickNumber = this.clientLastReceivedStateTick
-
-        for (tick in startTickNumber until clientTickNumber) {
-            this.serverInputMessages.inputs.add(this.clientInputBuffer[tick % cClientBufferSize])
-        }
-
-        this.serverInputMessages.start_tick_number = startTickNumber
-
-        timer += deltaTime
-        if (timer >= minTimeBetweenTicks) {
-            matchEvents.sendTheUpdatedState(this.serverInputMessages.copy())
-            serverInputMessages.inputs.clear()
-            serverInputMessages = InputWorldState()
-        }
-
-        this.clientTickNumber++
     }
 
     /**
@@ -281,7 +297,9 @@ class SceneManager(
 
             return WorldState(
                 tick = tick,
-                bulletUpdate = null,
+                bulletUpdate = BulletUpdate(
+                    scene.getBulletsToSend(tick)
+                ),
                 playerUpdate = PlayerUpdate(
                     players = arrayListOf(
                         PlayerServer(
@@ -291,8 +309,53 @@ class SceneManager(
                             playerGunPointer = playerGunPointer,
                         )
                     )
-                )
+                ),
             )
+        }
+    }
+
+    private fun createCurrentInputsState(tick: Int): InputsState? {
+        return getPlayer()?.let { player ->
+            val playerInputsState = PlayerInputsState(
+                playerMovementInputsState = PlayerMovementInputsState(
+                    angle = joystickLeft.angle,
+                    strength = joystickLeft.strength,
+                ),
+                playerAimInputsState = PlayerAimInputsState(
+                    angle = joystickRight.angle,
+                    strength = joystickRight.strength,
+                ),
+                playerGunInputsState = PlayerGunInputsState(
+                    position = player.getMainGunPointer().getRotatedPosition(joystickRight.angle),
+                    angle = joystickRight.angle,
+                ),
+            )
+
+            return InputsState(
+                tick = tick,
+                playerId = player.playerId,
+                playerInputsState = playerInputsState,
+                bulletInputsState = arrayListOf(),
+            )
+        }
+    }
+
+    private fun createBulletInputsState(tick: Int): List<BulletInputsState> {
+        return scene.getBulletsToSend(tick).let { list ->
+            if (list.isEmpty()) {
+                arrayListOf()
+            } else {
+                val arrBullets = arrayListOf<BulletInputsState>()
+                scene.getBulletsToSend(tick).forEach { bullet ->
+                    arrBullets.add(
+                        BulletInputsState(
+                            ownerId = bullet.ownerId,
+                            bulletId = bullet.bulletId,
+                        )
+                    )
+                }
+                arrBullets
+            }
         }
     }
 }
