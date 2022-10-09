@@ -4,7 +4,6 @@ import android.graphics.Canvas
 import android.view.MotionEvent
 import com.rittmann.myapplication.main.entity.Bullet
 import com.rittmann.myapplication.main.entity.Player
-import com.rittmann.myapplication.main.entity.Position
 import com.rittmann.myapplication.main.entity.server.InputsState
 import com.rittmann.myapplication.main.entity.server.WorldState
 

@@ -6,7 +6,6 @@ import com.rittmann.myapplication.main.entity.Bullet
 import com.rittmann.myapplication.main.entity.server.InputWorldState
 import com.rittmann.myapplication.main.entity.server.PlayerShootingEmit
 import com.rittmann.myapplication.main.entity.server.WorldState
-import com.rittmann.myapplication.main.scene.SceneManager
 import com.rittmann.myapplication.main.server.ConnectionControl
 import com.rittmann.myapplication.main.utils.Logger
 

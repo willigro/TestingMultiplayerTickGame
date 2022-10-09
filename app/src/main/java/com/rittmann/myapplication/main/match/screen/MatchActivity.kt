@@ -15,7 +15,6 @@ import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.server.InputWorldState
 import com.rittmann.myapplication.main.entity.server.WorldState
 import com.rittmann.myapplication.main.match.MatchEvents
-import com.rittmann.myapplication.main.scene.SceneManager
 import com.rittmann.myapplication.main.server.ConnectionControl
 import com.rittmann.myapplication.main.server.ConnectionControlEvents
 import com.rittmann.myapplication.main.server.ConnectionControlListeners

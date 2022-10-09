@@ -3,7 +3,6 @@ package com.rittmann.myapplication.main.match
 import com.rittmann.myapplication.main.entity.Bullet
 import com.rittmann.myapplication.main.entity.server.InputWorldState
 import com.rittmann.myapplication.main.entity.server.WorldState
-import com.rittmann.myapplication.main.scene.SceneManager
 
 interface MatchEvents {
     fun shoot(bullet: Bullet)

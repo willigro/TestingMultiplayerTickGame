@@ -1,6 +1,5 @@
 package com.rittmann.myapplication.main.server
 
-import android.util.Log
 import com.rittmann.myapplication.main.entity.Bullet
 import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.Position
@@ -11,7 +10,6 @@ import com.rittmann.myapplication.main.entity.server.PlayerMovement
 import com.rittmann.myapplication.main.entity.server.PlayerServer
 import com.rittmann.myapplication.main.entity.server.PlayerUpdate
 import com.rittmann.myapplication.main.entity.server.WorldState
-import com.rittmann.myapplication.main.match.screen.GLOBAL_TAG
 import org.json.JSONObject
 
 fun JSONObject.mapToPlayer(): Player {
