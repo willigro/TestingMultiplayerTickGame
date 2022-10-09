@@ -85,6 +85,7 @@ class SceneMain(
             if (playerServer.id == player?.playerId) {
                 player?.also { player ->
                     player.move(
+                        deltaTime,
                         playerServer.playerMovement.angle,
                         playerServer.playerMovement.strength,
                         playerServer.playerMovement.position,
@@ -94,18 +95,39 @@ class SceneMain(
                         playerServer.playerAim.angle,
                     )
 
-                    if (playerServer.playerAim.strength > MIN_STRENGTH_TO_SHOT) {
-                        player.shoot()?.also { bullet ->
-                            "creating a bullet".log()
-                            createNewBullet(bullet)
-                        }
-                    }
+                    // TODO: as the bullets are been brought from the server, I don't guess that I'll need to create
+                    //  a new bullet using this approach, it can duplicate a bullet, or create a wrong bullet that
+                    //  will not been sent
+//                    if (playerServer.playerAim.strength > MIN_STRENGTH_TO_SHOT) {
+//                        player.shoot()?.also { bullet ->
+//                            "creating a bullet".log()
+//                            createNewBullet(bullet)
+//                        }
+//                    }
                 }
             } else {
                 // I'm going to use the above move here
                 val enemy = enemies.firstOrNull { it.playerId == playerServer.id }
 
-                enemy?.keepTheNextPlayerMovement(playerServer)
+                enemy?.also { player ->
+                    player.move(
+                        deltaTime,
+                        playerServer.playerMovement.angle,
+                        playerServer.playerMovement.strength,
+                        playerServer.playerMovement.position,
+                    )
+
+                    player.aim(
+                        playerServer.playerAim.angle,
+                    )
+
+//                    if (playerServer.playerAim.strength > MIN_STRENGTH_TO_SHOT) {
+//                        player.shoot()?.also { bullet ->
+//                            "creating a bullet".log()
+//                            createNewBullet(bullet)
+//                        }
+//                    }
+                }
             }
         }
 
@@ -179,7 +201,6 @@ class SceneMain(
     }
 
     override fun getBulletsToSend(tick: Int): List<Bullet> {
-//        "getBulletsToSend=${_bulletsToSend.size}".log()
         return _bulletsToSend
     }
 
@@ -190,7 +211,6 @@ class SceneMain(
 
     private fun updateBullets(deltaTime: Double) {
         val bulletIterator = _bulletsInGame.iterator()
-
         while (bulletIterator.hasNext()) {
             val currentBullet = bulletIterator.next()
 

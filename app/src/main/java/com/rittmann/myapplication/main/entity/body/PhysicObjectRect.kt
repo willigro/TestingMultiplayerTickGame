@@ -12,7 +12,7 @@ abstract class PhysicObjectRect(var position: Position, var width: Int, var heig
     var rotationAngle: Double = DEFAULT_ROTATION
 
     open fun move(position: Position) {
-        position.set(position)
+        this.position.set(position)
         rect.setByPosition(position, width, height)
     }
 
