@@ -1,9 +1,12 @@
 package com.rittmann.myapplication.main.scene
 
 import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
 import android.util.Log
 import android.view.MotionEvent
 import com.rittmann.myapplication.main.components.Joystick
+import com.rittmann.myapplication.main.core.GameMainThread.Companion.CURRENT_DELTA_TIME
 import com.rittmann.myapplication.main.entity.BULLET_DEFAULT_MAX_DISTANCE
 import com.rittmann.myapplication.main.entity.BULLET_DEFAULT_VELOCITY
 import com.rittmann.myapplication.main.entity.Bullet
@@ -13,6 +16,7 @@ import com.rittmann.myapplication.main.entity.server.InputsState
 import com.rittmann.myapplication.main.entity.server.WorldState
 import com.rittmann.myapplication.main.match.MatchEvents
 import com.rittmann.myapplication.main.match.screen.GLOBAL_TAG
+import com.rittmann.myapplication.main.match.screen.MatchActivity.Companion.SCREEN_WIDTH
 import com.rittmann.myapplication.main.utils.INVALID_ID
 import com.rittmann.myapplication.main.utils.Logger
 
@@ -30,12 +34,63 @@ class SceneMain(
     private var joystickMovement: Joystick = Joystick()
     private var joystickAim: Joystick = Joystick()
 
+    val paintText = Paint()
+
+    init {
+        paintText.color = Color.WHITE
+        paintText.textAlign = Paint.Align.CENTER
+        paintText.textSize = 50f
+
+    }
+
     override fun update(deltaTime: Double, tick: Int) {}
 
     override fun draw(canvas: Canvas) {
         player?.draw(canvas)
         enemies.forEach { it.draw(canvas) }
         _bulletsInGame.forEach { it.draw(canvas) }
+
+
+        val xPos = SCREEN_WIDTH / 2
+        var yPos = 40
+
+        canvas.drawText("delta=$CURRENT_DELTA_TIME", xPos.toFloat(), yPos.toFloat(), paintText)
+
+        yPos += 40
+
+        canvas.drawText(
+            "tick=${SceneManager.clientTickNumber}",
+            xPos.toFloat(),
+            yPos.toFloat(),
+            paintText
+        )
+
+        yPos += 40
+
+        canvas.drawText(
+            "Last tick received=${SceneManager.clientLastReceivedStateTick}",
+            xPos.toFloat(),
+            yPos.toFloat(),
+            paintText
+        )
+
+        yPos += 40
+
+        canvas.drawText(
+            "Size received=${SceneManager.clientStateMessagesSize}",
+            xPos.toFloat(),
+            yPos.toFloat(),
+            paintText
+        )
+
+        yPos += 40
+
+        canvas.drawText(
+            "Size sent=${SceneManager.serverInputMessagesSize}",
+            xPos.toFloat(),
+            yPos.toFloat(),
+            paintText
+        )
     }
 
     override fun finishFrame() {
@@ -48,13 +103,13 @@ class SceneMain(
     }
 
     override fun ownPlayerCreated(player: Player) {
-        "ownPlayerCreated".log()
+        "ownPlayerCreated=${player.playerId}".log()
         player.retrieveCollider().enable()
         this.player = player
     }
 
     override fun newPlayerConnected(player: Player) {
-        "newPlayerConnected".log()
+        "newPlayerConnected=${player.playerId}".log()
         player.retrieveCollider().enable()
         enemies.add(player)
     }
@@ -93,19 +148,13 @@ class SceneMain(
 
                     player.aim(
                         playerServer.playerAim.angle,
+                        playerServer.playerAim.strength,
                     )
-
-                    // TODO: as the bullets are been brought from the server, I don't guess that I'll need to create
-                    //  a new bullet using this approach, it can duplicate a bullet, or create a wrong bullet that
-                    //  will not been sent
-//                    if (playerServer.playerAim.strength > MIN_STRENGTH_TO_SHOT) {
-//                        player.shoot()?.also { bullet ->
-//                            "creating a bullet".log()
-//                            createNewBullet(bullet)
-//                        }
-//                    }
                 }
             } else {
+//                enemies.forEach {
+//                    "enemy=${it.playerId}, playerServer=${playerServer.id}, hostPlayer=${player?.playerId}".log()
+//                }
                 // I'm going to use the above move here
                 val enemy = enemies.firstOrNull { it.playerId == playerServer.id }
 
@@ -119,14 +168,8 @@ class SceneMain(
 
                     player.aim(
                         playerServer.playerAim.angle,
+                        playerServer.playerAim.strength,
                     )
-
-//                    if (playerServer.playerAim.strength > MIN_STRENGTH_TO_SHOT) {
-//                        player.shoot()?.also { bullet ->
-//                            "creating a bullet".log()
-//                            createNewBullet(bullet)
-//                        }
-//                    }
                 }
             }
         }
@@ -173,8 +216,6 @@ class SceneMain(
 
     // It will run a new state based on the inputs
     override fun onWorldUpdated(inputsState: InputsState, deltaTime: Double) = with(inputsState) {
-        playerInputsState.playerAimInputsState
-
         player?.also { player ->
             player.move(
                 deltaTime,
@@ -184,9 +225,10 @@ class SceneMain(
 
             player.aim(
                 playerInputsState.playerAimInputsState.angle,
+                playerInputsState.playerAimInputsState.strength,
             )
 
-            if (playerInputsState.playerAimInputsState.strength > MIN_STRENGTH_TO_SHOT) {
+            if (player.aimStrength > MIN_STRENGTH_TO_SHOT) {
                 player.shoot()?.also { bullet ->
                     createNewBullet(bullet)
                 }
@@ -196,7 +238,7 @@ class SceneMain(
         updateBullets(deltaTime)
     }
 
-    override fun getEnemies(): List<Player> {
+    override fun getEnemies(): ArrayList<Player> {
         return enemies
     }
 

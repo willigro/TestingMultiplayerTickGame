@@ -12,6 +12,16 @@ import org.junit.Assert.*
 class ExampleUnitTest {
     @Test
     fun addition_isCorrect() {
-        assertEquals(4, 2 + 2)
+        val BUFFER_SIZE = 1024
+
+        val clientStatePreBuffer: Array<String?> = Array(BUFFER_SIZE) { null }
+
+        clientStatePreBuffer[0 % BUFFER_SIZE] = "a"
+        clientStatePreBuffer[1 % BUFFER_SIZE] = "b"
+        clientStatePreBuffer[2 % BUFFER_SIZE] = "c"
+        clientStatePreBuffer[3 % BUFFER_SIZE] = "d"
+
+        assertEquals(null, clientStatePreBuffer[4 % BUFFER_SIZE])
+
     }
 }

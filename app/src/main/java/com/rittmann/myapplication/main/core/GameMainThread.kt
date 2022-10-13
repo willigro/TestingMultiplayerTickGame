@@ -28,7 +28,7 @@ class GameMainThread(
 //            Thread.currentThread().name.log()
             canvas = null
 
-            update(deltaTime = deltaTime.coerceAtLeast(1) / 1000.0)
+            update(deltaTime = 0.05) // deltaTime.coerceAtLeast(1) / 1000.0
             calculateSleep(targetTime, startFrameTime, million)
             totalTime += System.nanoTime() - startFrameTime
             frameCount++
@@ -56,6 +56,7 @@ class GameMainThread(
 
     private fun update(deltaTime: Double) {
         try {
+            CURRENT_DELTA_TIME = deltaTime
             canvas = surfaceHolder.lockCanvas()
             // garente que apenas uma thread por vez execurata este trecho
             synchronized(surfaceHolder) {
@@ -82,7 +83,8 @@ class GameMainThread(
     }
 
     companion object {
-        private const val MAX_FPS = 15
+        const val MAX_FPS = 20
+        var CURRENT_DELTA_TIME = 0.0 // Use it for logs
         private var canvas: Canvas? = null
     }
 }

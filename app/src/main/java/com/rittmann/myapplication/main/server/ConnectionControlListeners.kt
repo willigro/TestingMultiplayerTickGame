@@ -10,6 +10,7 @@ const val ON_NEW_PLAYER_CONNECTED = "new player connected"
 const val ON_PLAYER_CREATED = "player created"
 const val ON_PLAYER_DISCONNECTED = "player disconnected"
 const val ON_WORLD_STATE = "world state"
+const val ON_GAME_STARTED = "on game started"
 
 const val DATA_PLAYER_ID = "id"
 const val DATA_PLAYER_POSITION = "position"
@@ -38,6 +39,7 @@ class ConnectionControlListeners(
         onNewPlayerConnected()
         onPlayerDisconnected()
 
+        onGameStarted()
         onWorldUpdated()
     }
 
@@ -50,6 +52,7 @@ class ConnectionControlListeners(
     private fun onEventDisconnect() = with(socket) {
         on(Socket.EVENT_DISCONNECT) {
             connectionControlEvents.logCallback("EVENT_DISCONNECT")
+            connectionControlEvents.onGameDisconnected()
         }
     }
 
@@ -63,7 +66,12 @@ class ConnectionControlListeners(
                 val ownPlayer = newPlayerJson.mapToPlayer()
 
                 connectionControlEvents.logCallback("PLAYER_CREATED My Player: $ownPlayer\nPlayers: $players")
-                connectionControlEvents.connectionCreated(ownPlayer)
+                connectionControlEvents.connectionCreated(
+                    NewPlayerConnected(
+                        player = ownPlayer,
+                        tick = data.getInt("tick"),
+                    )
+                )
 
                 for (i in 0 until players.length()) {
                     players.getJSONObject(i)?.also { json ->
@@ -71,7 +79,7 @@ class ConnectionControlListeners(
                         if (newCreatedPlayer.playerId != ownPlayer.playerId) {
                             connectionControlEvents.newPlayerConnected(
                                 NewPlayerConnected(
-                                    player = newPlayerJson.mapToPlayer(),
+                                    player = newCreatedPlayer,
                                     tick = data.getInt("tick"),
                                 )
                             )
@@ -123,16 +131,30 @@ class ConnectionControlListeners(
         }
     }
 
+    private fun onGameStarted() = with(socket) {
+        on(ON_GAME_STARTED) { args ->
+            if (args != null && args.isNotEmpty()) {
+                val data = args[0] as JSONObject
+                try {
+                    connectionControlEvents.onGameStarted(data.getInt("tick"))
+                    connectionControlEvents.logCallback("ON_GAME_STARTED")
+                } catch (e: JSONException) {
+                    e.printStackTrace()
+                    connectionControlEvents.logCallback("ON_GAME_STARTED Error")
+                }
+            }
+        }
+    }
+
     private fun onWorldUpdated() = with(socket) {
         on(ON_WORLD_STATE) { args ->
             if (args != null && args.isNotEmpty()) {
                 val data = args[0] as JSONObject
                 try {
-//                connectionControlEvents.logCallback("ON_PLAYER_SHOOTING Shooting result: $result")
                     connectionControlEvents.onPlayerUpdate(data.mapToListWorldUpdate())
                 } catch (e: JSONException) {
                     e.printStackTrace()
-                    connectionControlEvents.logCallback("ON_PLAYER_MOVED Error")
+                    connectionControlEvents.logCallback("ON_WORLD_STATE Error")
                 }
             }
         }

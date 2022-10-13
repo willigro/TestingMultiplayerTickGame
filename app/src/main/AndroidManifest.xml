@@ -17,14 +17,23 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
         <activity
-            android:name=".main.match.screen.MatchActivity"
-            android:exported="true"
-            android:theme="@style/Theme.MyApplication.NoActionBar.FullScreen">
+            android:name=".main.testing.TestingActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name=".main.match.screen.MatchActivity"
+            android:exported="true"
+            android:theme="@style/Theme.MyApplication.NoActionBar.FullScreen">
+            <!--            <intent-filter>-->
+            <!--                <action android:name="android.intent.action.MAIN" />-->
+
+            <!--                <category android:name="android.intent.category.LAUNCHER" />-->
+            <!--            </intent-filter>-->
         </activity>
     </application>
 

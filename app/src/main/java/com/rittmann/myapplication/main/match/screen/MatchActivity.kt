@@ -11,7 +11,6 @@ import com.rittmann.myapplication.R
 import com.rittmann.myapplication.main.components.JoystickView
 import com.rittmann.myapplication.main.core.GamePanel
 import com.rittmann.myapplication.main.entity.Bullet
-import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.server.InputWorldState
 import com.rittmann.myapplication.main.entity.server.WorldState
 import com.rittmann.myapplication.main.match.MatchEvents
@@ -113,12 +112,20 @@ class MatchActivity : AppCompatActivity(), ConnectionControlEvents, MatchEvents,
         }
     }
 
-    override fun connectionCreated(player: Player) {
+    override fun connectionCreated(player: ConnectionControlListeners.NewPlayerConnected) {
         gamePanel?.ownPlayerCreated(player)
     }
 
     override fun newPlayerConnected(player: ConnectionControlListeners.NewPlayerConnected) {
         gamePanel?.newPlayerConnected(player)
+    }
+
+    override fun onGameStarted(tick: Int) {
+        gamePanel?.onGameStarted(tick)
+    }
+
+    override fun onGameDisconnected() {
+        gamePanel?.onGameDisconnected()
     }
 
     override fun playerDisconnected(id: String) {

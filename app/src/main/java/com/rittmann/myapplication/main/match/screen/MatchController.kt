@@ -52,4 +52,12 @@ class MatchController(private val connectionControl: ConnectionControl) : Logger
             )
         )
     }
+
+    fun emit(
+        value: String
+    ) {
+        connectionControl.emit(
+            ConnectionControl.EMIT_PLAYER_UPDATE, value
+        )
+    }
 }

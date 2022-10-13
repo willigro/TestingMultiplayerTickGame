@@ -5,4 +5,133 @@
     <string name="match_interface_label_hp">HP</string>
 
     <string name="match_interface_initial_value_hp">100%</string>
+
+
+    <string name="default_emit_player_one_1">
+        { \"inputs\": [
+        { \"bulletInputsState\": [], \"playerId\": \"PLAYER_1\", \"playerInputsState\": { \"playerAimInputsState\": { \"angle\": 0.0, \"strength\": 0.0 }, \"playerGunInputsState\": { \"angle\": 0.0, \"position\": { \"x\": 140.0, \"y\": 100.0 } }, \"playerMovementInputsState\": { \"angle\": 0.0, \"strength\": 0.0 } }, \"tick\": 0 } ,
+        { \"bulletInputsState\": [], \"playerId\": \"PLAYER_1\", \"playerInputsState\": { \"playerAimInputsState\": { \"angle\": 0.0, \"strength\": 0.0 }, \"playerGunInputsState\": { \"angle\": 0.0, \"position\": { \"x\": 140.0, \"y\": 100.0 } }, \"playerMovementInputsState\": { \"angle\": 0.0, \"strength\": 0.0 } }, \"tick\": 1 }
+        ], \"start_tick_number\": 0 }
+    </string>
+    <string name="default_emit_player_one_2">
+        { \"inputs\": [
+        { \"bulletInputsState\": [], \"playerId\": \"PLAYER_1\", \"playerInputsState\": { \"playerAimInputsState\": { \"angle\": 0.0, \"strength\": 0.0 }, \"playerGunInputsState\": { \"angle\": 0.0, \"position\": { \"x\": 140.0, \"y\": 100.0 } }, \"playerMovementInputsState\": { \"angle\": 0.0, \"strength\": 0.0 } }, \"tick\": 2 },
+        { \"bulletInputsState\": [], \"playerId\": \"PLAYER_1\", \"playerInputsState\": { \"playerAimInputsState\": { \"angle\": 0.0, \"strength\": 0.0 }, \"playerGunInputsState\": { \"angle\": 0.0, \"position\": { \"x\": 140.0, \"y\": 100.0 } }, \"playerMovementInputsState\": { \"angle\": 322.8665294483597, \"strength\": 99.86154932931788 } }, \"tick\": 3 }
+        ], \"start_tick_number\": 2 }
+
+    </string>
+    <string name="default_emit_player_one_3">
+        { \"inputs\": [
+        { \"bulletInputsState\": [], \"playerId\": \"PLAYER_1\", \"playerInputsState\": { \"playerAimInputsState\": { \"angle\": 0.0, \"strength\": 0.0 }, \"playerGunInputsState\": { \"angle\": 0.0, \"position\": { \"x\": 140.0, \"y\": 100.0 } }, \"playerMovementInputsState\": { \"angle\": 322.04478449522594, \"strength\": 99.67429276778086 } }, \"tick\": 4 },
+        { \"bulletInputsState\": [], \"playerId\": \"PLAYER_1\", \"playerInputsState\": { \"playerAimInputsState\": { \"angle\": 0.0, \"strength\": 0.0 }, \"playerGunInputsState\": { \"angle\": 0.0, \"position\": { \"x\": 140.0, \"y\": 100.0 } }, \"playerMovementInputsState\": { \"angle\": 322.04478449522594, \"strength\": 99.67429276778086} }, \"tick\": 5 }
+        ], \"start_tick_number\": 4 }
+    </string>
+
+    <string name="default_emit_player_two_1">
+        { \"inputs\": [
+        { \"bulletInputsState\": [], \"playerId\": \"PLAYER_2\", \"playerInputsState\": { \"playerAimInputsState\": { \"angle\": 0.0, \"strength\": 0.0 }, \"playerGunInputsState\": { \"angle\": 0.0, \"position\": { \"x\": 140.0, \"y\": 100.0 } }, \"playerMovementInputsState\": { \"angle\": 0.0, \"strength\": 0.0 } }, \"tick\": 0 },
+        { \"bulletInputsState\": [], \"playerId\": \"PLAYER_2\", \"playerInputsState\": { \"playerAimInputsState\": { \"angle\": 0.0, \"strength\": 0.0 }, \"playerGunInputsState\": { \"angle\": 0.0, \"position\": { \"x\": 140.0, \"y\": 100.0 } }, \"playerMovementInputsState\": { \"angle\": 0.0, \"strength\": 0.0 } }, \"tick\": 1 }
+        ], \"start_tick_number\": 0 }
+    </string>
+    <string name="default_emit_player_two_2">
+        { \"inputs\": [
+        { \"bulletInputsState\": [], \"playerId\": \"PLAYER_2\", \"playerInputsState\": { \"playerAimInputsState\": { \"angle\": 0.0, \"strength\": 0.0 }, \"playerGunInputsState\": { \"angle\": 0.0, \"position\": { \"x\": 140.0, \"y\": 100.0 } }, \"playerMovementInputsState\": { \"angle\": 0.0, \"strength\": 0.0 } }, \"tick\": 2 },
+        { \"bulletInputsState\": [], \"playerId\": \"PLAYER_2\", \"playerInputsState\": { \"playerAimInputsState\": { \"angle\": 0.0, \"strength\": 0.0 }, \"playerGunInputsState\": { \"angle\": 0.0, \"position\": { \"x\": 140.0, \"y\": 100.0 } }, \"playerMovementInputsState\": { \"angle\": 0.0, \"strength\": 0.0 } }, \"tick\": 3 }
+        ], \"start_tick_number\": 2 }
+    </string>
+    <string name="default_emit_player_two_3">
+        { \"inputs\": [
+        { \"bulletInputsState\": [], \"playerId\": \"PLAYER_2\", \"playerInputsState\": { \"playerAimInputsState\": { \"angle\": 0.0, \"strength\": 0.0 }, \"playerGunInputsState\": { \"angle\": 0.0, \"position\": { \"x\": 140.0, \"y\": 100.0 } }, \"playerMovementInputsState\": { \"angle\": 0.0, \"strength\": 0.0 } }, \"tick\": 4 },
+        { \"bulletInputsState\": [], \"playerId\": \"PLAYER_2\", \"playerInputsState\": { \"playerAimInputsState\": { \"angle\": 0.0, \"strength\": 0.0 }, \"playerGunInputsState\": { \"angle\": 0.0, \"position\": { \"x\": 140.0, \"y\": 100.0 } }, \"playerMovementInputsState\": { \"angle\": 0.0, \"strength\": 0.0 } }, \"tick\": 5 }
+        ], \"start_tick_number\": 4 }
+    </string>
 </resources>
+
+
+
+
+
+
+<!--<string name="default_emit_player_one_1">-->
+<!--        { \"inputs\": [{ \"bulletInputsState\": [], \"playerId\": \"PLAYER_1\", \"playerInputsState\": { \"playerAimInputsState\": { \"angle\": 0.0, \"strength\": 0.0 }, \"playerGunInputsState\": { \"angle\": 0.0, \"position\": { \"x\": 140.0, \"y\": 100.0 } }, \"playerMovementInputsState\": { \"angle\": 0.0, \"strength\": 0.0 } }, \"tick\": 1 }], \"start_tick_number\": 1 }-->
+<!--        { \"inputs\": [{ \"bulletInputsState\": [], \"playerId\": \"PLAYER_1\", \"playerInputsState\": { \"playerAimInputsState\": { \"angle\": 0.0, \"strength\": 0.0 }, \"playerGunInputsState\": { \"angle\": 0.0, \"position\": { \"x\": 140.0, \"y\": 100.0 } }, \"playerMovementInputsState\": { \"angle\": 0.0, \"strength\": 0.0 } }, \"tick\": 2 }], \"start_tick_number\": 1 }-->
+<!--    </string>-->
+<!--<string name="default_emit_player_one_2">-->
+<!--        { \"inputs\": [{ \"bulletInputsState\": [], \"playerId\": \"PLAYER_1\", \"playerInputsState\": { \"playerAimInputsState\": { \"angle\": 0.0, \"strength\": 0.0 }, \"playerGunInputsState\": { \"angle\": 0.0, \"position\": { \"x\": 140.0, \"y\": 100.0 } }, \"playerMovementInputsState\": { \"angle\": 0.0, \"strength\": 0.0 } }, \"tick\": 3 }], \"start_tick_number\": 3 }-->
+
+<!--        { \"inputs\": [{ \"bulletInputsState\": [], \"playerId\": \"PLAYER_1\", \"playerInputsState\": { \"playerAimInputsState\": { \"angle\": 0.0, \"strength\": 0.0 }, \"playerGunInputsState\": { \"angle\": 0.0, \"position\": { \"x\": 140.0, \"y\": 100.0 } }, \"playerMovementInputsState\": { \"angle\": 322.8665294483597, \"strength\": 99.86154932931788 } }, \"tick\": 4 }], \"start_tick_number\": 3 }-->
+<!--    </string>-->
+<!--<string name="default_emit_player_one_3">-->
+<!--        { \"inputs\": [{ \"bulletInputsState\": [], \"playerId\": \"PLAYER_1\", \"playerInputsState\": { \"playerAimInputsState\": { \"angle\": 0.0, \"strength\": 0.0 }, \"playerGunInputsState\": { \"angle\": 0.0, \"position\": { \"x\": 140.0, \"y\": 100.0 } }, \"playerMovementInputsState\": { \"angle\": 322.04478449522594, \"strength\": 99.67429276778086 } }, \"tick\": 5 }], \"start_tick_number\": 5 }-->
+
+<!--        { \"inputs\": [{ \"bulletInputsState\": [], \"playerId\": \"PLAYER_1\", \"playerInputsState\": { \"playerAimInputsState\": { \"angle\": 0.0, \"strength\": 0.0 }, \"playerGunInputsState\": { \"angle\": 0.0, \"position\": { \"x\": 140.0, \"y\": 100.0 } }, \"playerMovementInputsState\": { \"angle\": 322.04478449522594, \"strength\": 99.67429276778086} }, \"tick\": 6 }], \"start_tick_number\": 5 }-->
+<!--    </string>-->
+
+<!--<string name="default_emit_player_two_1">-->
+<!--        { \"inputs\": [{ \"bulletInputsState\": [], \"playerId\": \"PLAYER_2\", \"playerInputsState\": { \"playerAimInputsState\": { \"angle\": 0.0, \"strength\": 0.0 }, \"playerGunInputsState\": { \"angle\": 0.0, \"position\": { \"x\": 140.0, \"y\": 100.0 } }, \"playerMovementInputsState\": { \"angle\": 0.0, \"strength\": 0.0 } }, \"tick\": 1 }], \"start_tick_number\": 1 }-->
+
+<!--        { \"inputs\": [{ \"bulletInputsState\": [], \"playerId\": \"PLAYER_2\", \"playerInputsState\": { \"playerAimInputsState\": { \"angle\": 0.0, \"strength\": 0.0 }, \"playerGunInputsState\": { \"angle\": 0.0, \"position\": { \"x\": 140.0, \"y\": 100.0 } }, \"playerMovementInputsState\": { \"angle\": 0.0, \"strength\": 0.0 } }, \"tick\": 2 }], \"start_tick_number\": 1 }-->
+<!--    </string>-->
+<!--<string name="default_emit_player_two_2">-->
+<!--        { \"inputs\": [{ \"bulletInputsState\": [], \"playerId\": \"PLAYER_2\", \"playerInputsState\": { \"playerAimInputsState\": { \"angle\": 0.0, \"strength\": 0.0 }, \"playerGunInputsState\": { \"angle\": 0.0, \"position\": { \"x\": 140.0, \"y\": 100.0 } }, \"playerMovementInputsState\": { \"angle\": 0.0, \"strength\": 0.0 } }, \"tick\": 3 }], \"start_tick_number\": 3 }-->
+
+<!--        { \"inputs\": [{ \"bulletInputsState\": [], \"playerId\": \"PLAYER_2\", \"playerInputsState\": { \"playerAimInputsState\": { \"angle\": 0.0, \"strength\": 0.0 }, \"playerGunInputsState\": { \"angle\": 0.0, \"position\": { \"x\": 140.0, \"y\": 100.0 } }, \"playerMovementInputsState\": { \"angle\": 0.0, \"strength\": 0.0 } }, \"tick\": 4 }], \"start_tick_number\": 3 }-->
+<!--    </string>-->
+<!--<string name="default_emit_player_two_3">-->
+<!--        { \"inputs\": [{ \"bulletInputsState\": [], \"playerId\": \"PLAYER_2\", \"playerInputsState\": { \"playerAimInputsState\": { \"angle\": 0.0, \"strength\": 0.0 }, \"playerGunInputsState\": { \"angle\": 0.0, \"position\": { \"x\": 140.0, \"y\": 100.0 } }, \"playerMovementInputsState\": { \"angle\": 0.0, \"strength\": 0.0 } }, \"tick\": 5 }], \"start_tick_number\": 5 }-->
+<!--        { \"inputs\": [{ \"bulletInputsState\": [], \"playerId\": \"PLAYER_2\", \"playerInputsState\": { \"playerAimInputsState\": { \"angle\": 0.0, \"strength\": 0.0 }, \"playerGunInputsState\": { \"angle\": 0.0, \"position\": { \"x\": 140.0, \"y\": 100.0 } }, \"playerMovementInputsState\": { \"angle\": 0.0, \"strength\": 0.0 } }, \"tick\": 6 }], \"start_tick_number\": 5 }-->
+<!--    </string>-->
+
+
+
+
+
+
+
+
+
+
+
+
+<!--<string name="default_emit_player_one_1">-->
+<!--        { \"inputs\": [{ \"bulletInputsState\": [], \"playerId\": \"PLAYER_1\", \"playerInputsState\": { \"playerAimInputsState\": { \"angle\": 0.0, \"strength\": 0.0 }, \"playerGunInputsState\": { \"angle\": 0.0, \"position\": { \"x\": 140.0, \"y\": 100.0 } }, \"playerMovementInputsState\": { \"angle\": 0.0, \"strength\": 0.0 } }, \"tick\": 1 }], \"start_tick_number\": 1 }-->
+<!--    </string>-->
+<!--<string name="default_emit_player_one_1_2">-->
+<!--        { \"inputs\": [{ \"bulletInputsState\": [], \"playerId\": \"PLAYER_1\", \"playerInputsState\": { \"playerAimInputsState\": { \"angle\": 0.0, \"strength\": 0.0 }, \"playerGunInputsState\": { \"angle\": 0.0, \"position\": { \"x\": 140.0, \"y\": 100.0 } }, \"playerMovementInputsState\": { \"angle\": 0.0, \"strength\": 0.0 } }, \"tick\": 2 }], \"start_tick_number\": 1 }-->
+<!--    </string>-->
+
+<!--<string name="default_emit_player_one_2">-->
+<!--        { \"inputs\": [{ \"bulletInputsState\": [], \"playerId\": \"PLAYER_1\", \"playerInputsState\": { \"playerAimInputsState\": { \"angle\": 0.0, \"strength\": 0.0 }, \"playerGunInputsState\": { \"angle\": 0.0, \"position\": { \"x\": 140.0, \"y\": 100.0 } }, \"playerMovementInputsState\": { \"angle\": 0.0, \"strength\": 0.0 } }, \"tick\": 3 }], \"start_tick_number\": 3 }-->
+<!--    </string>-->
+
+<!--<string name="default_emit_player_one_2_2">-->
+<!--        { \"inputs\": [{ \"bulletInputsState\": [], \"playerId\": \"PLAYER_1\", \"playerInputsState\": { \"playerAimInputsState\": { \"angle\": 0.0, \"strength\": 0.0 }, \"playerGunInputsState\": { \"angle\": 0.0, \"position\": { \"x\": 140.0, \"y\": 100.0 } }, \"playerMovementInputsState\": { \"angle\": 322.8665294483597, \"strength\": 99.86154932931788 } }, \"tick\": 4 }], \"start_tick_number\": 3 }-->
+<!--    </string>-->
+
+<!--<string name="default_emit_player_one_3">-->
+<!--        { \"inputs\": [{ \"bulletInputsState\": [], \"playerId\": \"PLAYER_1\", \"playerInputsState\": { \"playerAimInputsState\": { \"angle\": 0.0, \"strength\": 0.0 }, \"playerGunInputsState\": { \"angle\": 0.0, \"position\": { \"x\": 140.0, \"y\": 100.0 } }, \"playerMovementInputsState\": { \"angle\": 322.04478449522594, \"strength\": 99.67429276778086 } }, \"tick\": 5 }], \"start_tick_number\": 5 }-->
+<!--    </string>-->
+
+<!--<string name="default_emit_player_one_3_2">-->
+<!--        { \"inputs\": [{ \"bulletInputsState\": [], \"playerId\": \"PLAYER_1\", \"playerInputsState\": { \"playerAimInputsState\": { \"angle\": 0.0, \"strength\": 0.0 }, \"playerGunInputsState\": { \"angle\": 0.0, \"position\": { \"x\": 140.0, \"y\": 100.0 } }, \"playerMovementInputsState\": { \"angle\": 322.04478449522594, \"strength\": 99.67429276778086} }, \"tick\": 6 }], \"start_tick_number\": 5 }-->
+<!--    </string>-->
+
+<!--<string name="default_emit_player_two_1">-->
+<!--        { \"inputs\": [{ \"bulletInputsState\": [], \"playerId\": \"PLAYER_2\", \"playerInputsState\": { \"playerAimInputsState\": { \"angle\": 0.0, \"strength\": 0.0 }, \"playerGunInputsState\": { \"angle\": 0.0, \"position\": { \"x\": 140.0, \"y\": 100.0 } }, \"playerMovementInputsState\": { \"angle\": 0.0, \"strength\": 0.0 } }, \"tick\": 1 }], \"start_tick_number\": 1 }-->
+<!--    </string>-->
+
+<!--<string name="default_emit_player_two_1_2">-->
+<!--        { \"inputs\": [{ \"bulletInputsState\": [], \"playerId\": \"PLAYER_2\", \"playerInputsState\": { \"playerAimInputsState\": { \"angle\": 0.0, \"strength\": 0.0 }, \"playerGunInputsState\": { \"angle\": 0.0, \"position\": { \"x\": 140.0, \"y\": 100.0 } }, \"playerMovementInputsState\": { \"angle\": 0.0, \"strength\": 0.0 } }, \"tick\": 2 }], \"start_tick_number\": 1 }-->
+<!--    </string>-->
+<!--<string name="default_emit_player_two_2">-->
+<!--        { \"inputs\": [{ \"bulletInputsState\": [], \"playerId\": \"PLAYER_2\", \"playerInputsState\": { \"playerAimInputsState\": { \"angle\": 0.0, \"strength\": 0.0 }, \"playerGunInputsState\": { \"angle\": 0.0, \"position\": { \"x\": 140.0, \"y\": 100.0 } }, \"playerMovementInputsState\": { \"angle\": 0.0, \"strength\": 0.0 } }, \"tick\": 3 }], \"start_tick_number\": 3 }-->
+<!--    </string>-->
+<!--<string name="default_emit_player_two_2_2">-->
+<!--        { \"inputs\": [{ \"bulletInputsState\": [], \"playerId\": \"PLAYER_2\", \"playerInputsState\": { \"playerAimInputsState\": { \"angle\": 0.0, \"strength\": 0.0 }, \"playerGunInputsState\": { \"angle\": 0.0, \"position\": { \"x\": 140.0, \"y\": 100.0 } }, \"playerMovementInputsState\": { \"angle\": 0.0, \"strength\": 0.0 } }, \"tick\": 4 }], \"start_tick_number\": 3 }-->
+<!--    </string>-->
+<!--<string name="default_emit_player_two_3">-->
+<!--        { \"inputs\": [{ \"bulletInputsState\": [], \"playerId\": \"PLAYER_2\", \"playerInputsState\": { \"playerAimInputsState\": { \"angle\": 0.0, \"strength\": 0.0 }, \"playerGunInputsState\": { \"angle\": 0.0, \"position\": { \"x\": 140.0, \"y\": 100.0 } }, \"playerMovementInputsState\": { \"angle\": 0.0, \"strength\": 0.0 } }, \"tick\": 5 }], \"start_tick_number\": 5 }-->
+<!--    </string>-->
+<!--<string name="default_emit_player_two_3_2">-->
+<!--        { \"inputs\": [{ \"bulletInputsState\": [], \"playerId\": \"PLAYER_2\", \"playerInputsState\": { \"playerAimInputsState\": { \"angle\": 0.0, \"strength\": 0.0 }, \"playerGunInputsState\": { \"angle\": 0.0, \"position\": { \"x\": 140.0, \"y\": 100.0 } }, \"playerMovementInputsState\": { \"angle\": 0.0, \"strength\": 0.0 } }, \"tick\": 6 }], \"start_tick_number\": 5 }-->
+<!--    </string>-->

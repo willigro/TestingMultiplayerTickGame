@@ -1,6 +1,7 @@
 package com.rittmann.myapplication.main.entity.server
 
 import com.rittmann.myapplication.main.entity.Position
+import java.util.concurrent.atomic.AtomicBoolean
 
 //fun InputsState.mapToWorldUpdated(): WorldState {
 //    val playerUpdate = PlayerUpdate(
@@ -31,7 +32,16 @@ data class InputsState(
     val playerInputsState: PlayerInputsState,
     val bulletInputsState: List<BulletInputsState>,
 ) {
+
+    @Transient
+    private val canSend = AtomicBoolean(true)
+
     fun thereIsBullet() = bulletInputsState.isNotEmpty()
+    fun canSend(): Boolean = canSend.compareAndSet(true, false)
+    fun resetCanSend(): InputsState {
+        canSend.set(true)
+        return this
+    }
 }
 
 data class PlayerInputsState(

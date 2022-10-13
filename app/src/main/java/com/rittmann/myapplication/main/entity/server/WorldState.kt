@@ -72,11 +72,11 @@ data class WorldState(
     }
 }
 
-class BulletUpdate(
+data class BulletUpdate(
     val bullets: List<Bullet>
 )
 
-class PlayerUpdate(
+data class PlayerUpdate(
     val players: List<PlayerServer>
 )
 

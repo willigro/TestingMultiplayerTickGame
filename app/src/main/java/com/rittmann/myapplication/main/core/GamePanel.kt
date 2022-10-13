@@ -64,7 +64,11 @@ class GamePanel(
         return true
     }
 
-    fun ownPlayerCreated(player: Player) {
+    fun onGameStarted(tick: Int) {
+        sceneManager.onGameStarted(tick)
+    }
+
+    fun ownPlayerCreated(player: ConnectionControlListeners.NewPlayerConnected) {
         sceneManager.ownPlayerCreated(player)
     }
 
@@ -94,5 +98,9 @@ class GamePanel(
 
     fun onPlayerUpdate(worldState: List<WorldState>) {
         sceneManager.onPlayerUpdate(worldState)
+    }
+
+    fun onGameDisconnected() {
+        sceneManager.onGameDisconnected()
     }
 }

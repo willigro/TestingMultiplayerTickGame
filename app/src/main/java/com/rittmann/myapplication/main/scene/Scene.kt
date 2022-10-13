@@ -21,6 +21,6 @@ interface Scene {
     fun onJoystickAimChanged(angle: Double, strength: Double)
     fun onWorldUpdated(worldState: WorldState, deltaTime: Double)
     fun onWorldUpdated(inputsState: InputsState, deltaTime: Double)
-    fun getEnemies(): List<Player>
+    fun getEnemies(): ArrayList<Player>
     fun getBulletsToSend(tick: Int): List<Bullet>
 }
