@@ -9,4 +9,5 @@ interface MatchEvents {
     fun sendTheUpdatedState(deltaTime: Double, tick: Int, worldState: WorldState?)
     fun sendTheUpdatedState(inputWorldState: InputWorldState)
     fun draw()
+    fun gameMustStop()
 }

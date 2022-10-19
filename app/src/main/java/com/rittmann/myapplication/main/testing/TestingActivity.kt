@@ -3,6 +3,7 @@ package com.rittmann.myapplication.main.testing
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
 import com.rittmann.myapplication.R
@@ -62,6 +63,7 @@ class TestingActivity : AppCompatActivity(), ConnectionControlEvents, Logger {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_testing)
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         buttonConnectOne.setOnClickListener {
             matchController.connect()
@@ -83,6 +85,8 @@ class TestingActivity : AppCompatActivity(), ConnectionControlEvents, Logger {
             matchController.emit(getString(R.string.default_emit_player_one_3))
             Thread.sleep(Random.nextLong(50, 120))
             matchController.emit(getString(R.string.default_emit_player_two_3))
+
+            matchController.gameMustStop()
         }
 
         buttonEmitTwo.setOnClickListener {

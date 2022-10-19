@@ -123,6 +123,10 @@ class SceneManager(
     }
 
     fun onGameDisconnected() {
+        clientTickNumber = 0
+        clientLastReceivedStateTick = 0
+        clientStateMessagesSize = 0
+        serverInputMessagesSize = 0
         matchInitiliazed = false
     }
 
@@ -163,12 +167,12 @@ class SceneManager(
         clientStateMessages.clear()
         clientStateMessages.addAll(arr)
         clientStateMessagesSize = worldState.size
-//        worldState.forEach {
-//            it.bulletUpdate?.bullets?.forEach {'
-//                it.position.toString().log()
-//            }
-//        }
-//        "clientStateMessages.size=${clientStateMessages.size}, currentTick=$clientTickNumber".log()
+        "clientStateMessages.size=${clientStateMessages.size}, currentTick=$clientTickNumber".log()
+        worldState.forEach { w ->
+            w.playerUpdate.players.forEach {
+                "tick=${w.tick} ${it.id} ${it.playerMovement}".log()
+            }
+        }
     }
 
     fun getEnemies(): List<Player> {
@@ -188,7 +192,7 @@ class SceneManager(
 
         // Store the current world state processed that used the current inputs "
         this.clientStatePreBuffer[bufferSlot] = createCurrentWorldState(clientTickNumber).apply {
-            "\nCurrent PRE world at tick=$clientTickNumber, on bufferSlot=$bufferSlot -> $this".log()
+            "\nCurrent PRE world at tick=$clientTickNumber, on bufferSlot=$bufferSlot -> ${this?.printPlayers()}".log()
         }
 
         // Get the current inputs and process the world
@@ -196,7 +200,7 @@ class SceneManager(
 
         // Store the current world state processed that used the current inputs
         this.clientStatePostBuffer[bufferSlot] = createCurrentWorldState(clientTickNumber).apply {
-            "Current POST world at tick=$clientTickNumber -> $this".log()
+            "Current POST world at tick=$clientTickNumber -> ${this?.printPlayers()}".log()
         }
 
         // TODO!! I guess that I need to store the current state without proccess it!!!!
@@ -291,7 +295,7 @@ class SceneManager(
                     // Store the world state
                     this.clientStatePreBuffer[bufferSlot] =
                         createCurrentWorldState(rewindTickNumber).apply {
-//                            "Current PRE (rewinded) world at tick=$clientTickNumber -> $this".log()
+                            "Current PRE (rewinded) world at tick=$clientTickNumber -> ${this?.printPlayers()}".log()
                         }
 
                     // Reprocess the data
@@ -300,7 +304,7 @@ class SceneManager(
                     // Store the world state
                     this.clientStatePostBuffer[bufferSlot] =
                         createCurrentWorldState(rewindTickNumber).apply {
-//                            "Current POST (rewinded) world at tick=$clientTickNumber -> $this".log()
+                            "Current POST (rewinded) world at tick=$clientTickNumber -> ${this?.printPlayers()}".log()
                         }
 
                     // Store the new world state
@@ -328,16 +332,17 @@ class SceneManager(
                 "Move forward on tick=${stateMsg.tick}, on bufferSlot=$bufferSlot, state=$stateMsg".log()
 
 //                // Store the world state, as I'm forcing a new one, I guess that it need to be get the "new"
-//                this.clientStatePreBuffer[bufferSlot] = createCurrentWorldState(stateMsg.tick).apply {
-//                    "Current PRE (replayed) world at tick=$clientTickNumber -> $this".log()
-//                }
+                this.clientStatePreBuffer[bufferSlot] =
+                    createCurrentWorldState(stateMsg.tick).apply {
+                    "Current PRE (replayed) world at tick=$clientTickNumber -> ${this?.printPlayers()}".log()
+                    }
 
                 scene.onWorldUpdated(stateMsg, deltaTime)
 
                 // Store the world state, as I'm forcing a new one, I guess that it need to be get the "new"
                 this.clientStatePostBuffer[bufferSlot] =
                     createCurrentWorldState(stateMsg.tick).apply {
-//                    "Current POST (replayed) world at tick=$clientTickNumber -> $this".log()
+                        "Current POST (replayed) world at tick=$clientTickNumber -> ${this?.printPlayers()}".log()
                     }
 
                 // Get the tick of the last message processed
@@ -361,11 +366,13 @@ class SceneManager(
                             "state=$stateMsg").log()
 //                "Correcting for error at tick ${stateMsg.tick} clientTickNumber=$clientTickNumber (rewinding ${(clientTickNumber - stateMsg.tick)} ticks) positionError=$positionError serverPosition=${serverPosition} clientPastPosition=${clientPastPosition}".log()
 
-                    // Store the world state, as I'm forcing a new one, I guess that it need to be get the "new"
-                    this.clientStatePreBuffer[bufferSlot] =
-                        createCurrentWorldState(stateMsg.tick).apply {
-//                            "Current PRE (replayed) world at tick=$clientTickNumber -> $this".log()
-                        }
+                    // The pre world don't need to be changed, only the post, since I'm forcing a new state
+                    // unless I start to send the pre state from the server, as I'm not, I cannot know the
+                    // world state when I'm replaying because the world state can be built from a different state
+//                    this.clientStatePreBuffer[bufferSlot] =
+//                        createCurrentWorldState(stateMsg.tick).apply {
+//                            "Current PRE (replayed) world at tick=$clientTickNumber -> ${this?.printPlayers()}".log()
+//                        }
 
                     // Replay, it will force the world state to be equals to the server
                     scene.onWorldUpdated(stateMsg, deltaTime)
@@ -373,7 +380,7 @@ class SceneManager(
                     // Store the world state, as I'm forcing a new one, I guess that it need to be get the "new"
                     this.clientStatePostBuffer[bufferSlot] =
                         createCurrentWorldState(stateMsg.tick).apply {
-//                            "Current POST (replayed) world at tick=$clientTickNumber -> $this".log()
+                            "Current POST (replayed) world at tick=$clientTickNumber -> ${this?.printPlayers()}".log()
                         }
 
                     // Get the tick of the last message processed
@@ -404,7 +411,7 @@ class SceneManager(
         val localStatePost = this.clientStatePostBuffer[bufferSlot]
         val localStatePre = this.clientStatePreBuffer[bufferSlot]
         val localState = localStatePost
-        "localState PRE used to compare the error=$localStatePre".log()
+//        "localState PRE used to compare the error=$localStatePre".log()
         "localState POST used to compare the error=$localStatePost".log()
 
         if (stateMsg.tick != localState?.tick) return false
@@ -421,7 +428,8 @@ class SceneManager(
                     ) {
                         ("distance error $distance, " +
                                 "player=${player.id}, " +
-                                "stateMsg.tick =${stateMsg.tick}, " +
+                                "current tick=${clientTickNumber}, " +
+                                "stateMsg.tick=${stateMsg.tick}, " +
                                 "on bufferSlot=$bufferSlot, " +
                                 "localState.tick=${localState.tick}, " +
                                 "positionLocal=${player.playerMovement.position}, " +
@@ -429,6 +437,8 @@ class SceneManager(
                                 "positionRemote=${remotePlayer.playerMovement.position} " +
                                 "angleRemote=${remotePlayer.playerMovement.angle}, "
                                 ).log()
+
+//                        stopGame(player.id)
                         return true
                     }
 
@@ -448,6 +458,13 @@ class SceneManager(
         }
 
         return false
+    }
+
+    private fun stopGame(id: String) {
+        if (id == getPlayer()?.playerId) {
+            matchEvents.gameMustStop()
+            matchInitiliazed = false
+        }
     }
 
     /**

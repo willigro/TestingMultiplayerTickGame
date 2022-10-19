@@ -14,6 +14,13 @@ data class WorldState(
     @Transient
     val alreadyProcessed: AtomicBoolean = AtomicBoolean(false)
 
+    fun printPlayers(): String {
+        playerUpdate.players.forEach {
+            "Id=${it.id} position=${it.playerMovement}".log()
+        }
+        return ""
+    }
+
     override fun equals(other: Any?): Boolean {
         if (other !is WorldState) {
             "isn't WorldState".log()

@@ -12,6 +12,7 @@ class ConnectionControl(
     companion object {
         const val EMIT_PLAYER_SHOOTING = "player shooting"
         const val EMIT_PLAYER_UPDATE = "player update"
+        const val EMIT_GAME_MUST_STOP = "game must stop"
     }
 
     private var socket: Socket? = null

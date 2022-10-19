@@ -60,4 +60,10 @@ class MatchController(private val connectionControl: ConnectionControl) : Logger
             ConnectionControl.EMIT_PLAYER_UPDATE, value
         )
     }
+
+    fun gameMustStop() {
+        connectionControl.emit(
+            ConnectionControl.EMIT_GAME_MUST_STOP, ""
+        )
+    }
 }

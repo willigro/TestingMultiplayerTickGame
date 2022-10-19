@@ -3,6 +3,7 @@ package com.rittmann.myapplication.main.match.screen
 import android.content.res.Resources
 import android.os.Bundle
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.ArrayAdapter
 import android.widget.ListView
 import android.widget.TextView
@@ -49,6 +50,7 @@ class MatchActivity : AppCompatActivity(), ConnectionControlEvents, MatchEvents,
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_match)
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         matchController.connect()
 
@@ -126,6 +128,8 @@ class MatchActivity : AppCompatActivity(), ConnectionControlEvents, MatchEvents,
 
     override fun onGameDisconnected() {
         gamePanel?.onGameDisconnected()
+        matchController.disconnect()
+        finish()
     }
 
     override fun playerDisconnected(id: String) {
@@ -154,6 +158,10 @@ class MatchActivity : AppCompatActivity(), ConnectionControlEvents, MatchEvents,
 //                txtValueHp.text = player.getCurrentHp().toString()
 //            }
 //        }
+    }
+
+    override fun gameMustStop() {
+        matchController.gameMustStop()
     }
 
     companion object {
