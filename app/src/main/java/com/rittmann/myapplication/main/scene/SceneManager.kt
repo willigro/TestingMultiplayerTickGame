@@ -25,10 +25,9 @@ import com.rittmann.myapplication.main.utils.Logger
 import java.util.*
 
 // KEEP IT EQUALS TO THE SERVER
-private const val SERVER_TICK_RATE = 2
 private const val BUFFER_SIZE = 1024
 private const val ERROR_POSITION_FACTOR = 0.001
-private const val COUNT_TO_SEND = 2
+private const val COUNT_OF_TICKS_TO_SEND = 2
 
 class SceneManager(
     private val matchEvents: MatchEvents,
@@ -47,9 +46,7 @@ class SceneManager(
     private var joystickLeft: Joystick = Joystick()
     private var joystickRight: Joystick = Joystick()
 
-    private var timer = 0.0
-    private var minTimeBetweenTicks = 1.0 / SERVER_TICK_RATE
-    private var countToSend = 0
+    private var ticksLoadedToSend = 0
     private var lastSent = -1
 
     private val clientStatePreBuffer: Array<WorldState?> = Array(BUFFER_SIZE) { null }
@@ -68,41 +65,22 @@ class SceneManager(
     }
 
     fun update(deltaTime: Double) {
+        // If there the player is not connected or the match is not initialized then don't update the game
         if (getPlayer() == null || matchInitiliazed.not()) return
-
-//        if (clientTickNumber - clientLastReceivedStateTick < -(MAX_FPS)) {
-//            "currentTick=${clientTickNumber}, clientLastReceivedStateTick=${clientLastReceivedStateTick}".log()
-//            clientTickNumber = clientLastReceivedStateTick
-//        }
 
         // Get the input data and process it (update the world)
         processTheCurrentInputAndRunTheWorldUsingThem(deltaTime)
 
-        // send input packet to server
+        // Send input packet to server
         buildTheInputPackageAndSendToTheServer(deltaTime)
 
-//        clientStateMessages.lastOrNull()?.also {
-//            clientLastReceivedStateTick = it.tick
-//        }
-
-//        if (clientLastReceivedStateTick > clientTickNumber) {
-//            "forward from $clientTickNumber to $clientLastReceivedStateTick".log()
-//            for (tick in clientTickNumber until clientLastReceivedStateTick) {
-//                clientStateMessages.firstOrNull { it.tick == tick }?.also {
-//                    scene.onWorldUpdated(it, deltaTime)
-//                    clientTickNumber++
-//                    "forward updating tick=${it.tick}, new clientTickNumber=$clientTickNumber".log()
-//                }
-//            }
-//        } else {
-//            processThePackageReceivedFromTheServerAndReconcileTheData(deltaTime)
-//        }
-
+        // Get the data from the server and handle it (replay, rewind, calculate error, etc)
         processThePackageReceivedFromTheServerAndReconcileTheData(deltaTime)
 
         // It will refresh and clear the variables and states
         scene.finishFrame()
 
+        // Update the tick, I'm updating it only after update all the world state, reconciliation, etc
         clientTickNumber++
     }
 
@@ -112,8 +90,7 @@ class SceneManager(
     }
 
     fun onGameStarted(tick: Int) {
-        timer = 0.0
-        countToSend = 0
+        ticksLoadedToSend = 0
         clientTickNumber = tick
         clientLastReceivedStateTick = tick
         clientStateMessages.clear()
@@ -131,14 +108,10 @@ class SceneManager(
     }
 
     fun ownPlayerCreated(player: ConnectionControlListeners.NewPlayerConnected) {
-//        reset(player)
-
         scene.ownPlayerCreated(player.player)
     }
 
     fun newPlayerConnected(player: ConnectionControlListeners.NewPlayerConnected) {
-//        reset(player)
-
         scene.newPlayerConnected(player.player)
     }
 
@@ -159,13 +132,17 @@ class SceneManager(
     }
 
     fun onPlayerUpdate(worldState: List<WorldState>) {
+        // I wanna to sort the list to always handle the messages by the tick ordering
         val arr = arrayListOf<WorldState>()
         arr.addAll(clientStateMessages)
         arr.addAll(worldState)
         arr.sortBy { it.tick }
 
+        // Clear and add the items
         clientStateMessages.clear()
         clientStateMessages.addAll(arr)
+
+        // Get the size and print the results for debug
         clientStateMessagesSize = worldState.size
         "clientStateMessages.size=${clientStateMessages.size}, currentTick=$clientTickNumber".log()
         worldState.forEach { w ->
@@ -180,103 +157,94 @@ class SceneManager(
     }
 
     private fun processTheCurrentInputAndRunTheWorldUsingThem(deltaTime: Double) {
-        // Get the current tick base on the currentTick
+        // Get the current buffer base on the current tick
         val bufferSlot = clientTickNumber % BUFFER_SIZE
 
         // Get the current data from the world, it will represents the current INPUT
-        // since it was not processed it, such as the ANGLES that are importants to move the objects
-        // TODO: since I need only the angle and strength to move (the mutable variable that the
-        //  movement depends on) I can get the joysticks values and create a new object to be the
-        //  inputs object, it will reduce the amount of data
+        // since it was not processed it, like the ANGLES that are important to move the objects
         val currentInputs = createCurrentInputsState(clientTickNumber)
 
-        // Store the current world state processed that used the current inputs "
+        // First I'm going to store the current state as the PRE world, because I wanna to store
+        // the world the way is was before process the inputs
         this.clientStatePreBuffer[bufferSlot] = createCurrentWorldState(clientTickNumber).apply {
             "\nCurrent PRE world at tick=$clientTickNumber, on bufferSlot=$bufferSlot -> ${this?.printPlayers()}".log()
         }
 
-        // Get the current inputs and process the world
+        // Process the world with the current inputs
         currentInputs?.let { input -> scene.onWorldUpdated(input, deltaTime) }
 
         // Store the current world state processed that used the current inputs
+        // This way I can know the result of the PRE loaded world + the current inputs and keep the
+        // reference to the current tick
         this.clientStatePostBuffer[bufferSlot] = createCurrentWorldState(clientTickNumber).apply {
             "Current POST world at tick=$clientTickNumber -> ${this?.printPlayers()}".log()
         }
-
-        // TODO!! I guess that I need to store the current state without proccess it!!!!
-        // Store the current world state processed that used the current inputs
-//        this.clientStateBuffer[bufferSlot] = createCurrentWorldState(clientTickNumber)
 
         // As the information about the bullet are important to send through the inputs
         // I'm going to try to get the bullets after the world evaluation, and then store the inputs
         this.clientInputBuffer[bufferSlot] = currentInputs?.copy(
             bulletInputsState = createBulletInputsState(clientTickNumber)
         )?.resetCanSend()
-
-//        clientTickNumber++
     }
 
     private fun buildTheInputPackageAndSendToTheServer(deltaTime: Double) {
-//        ("clientLastReceivedStateTick=$clientLastReceivedStateTick, " +
-//                "clientTickNumber=$clientTickNumber, " +
-//                "first.clientStateMessages.tick=${clientStateMessages.firstOrNull()?.tick}, " +
-//                "last.clientStateMessages.tick=${clientStateMessages.lastOrNull()?.tick}.").log()
-        // TODO: I'm forcing the last message, if it is null, send the last tick until the current
-        /*clientLastReceivedStateTick =
-            clientStateMessages.lastOrNull()?.tick ?: (clientTickNumber - 1)
-        if (clientLastReceivedStateTick > clientTickNumber) {
-            ("Server is ahead clientLastReceivedStateTick=$clientLastReceivedStateTick " +
-                    "clientTickNumber=$clientTickNumber").log()
-        }*/
+        // Keep the number of the first tick that will be sent
         val startTickNumber = lastSent + 1
-//        val startTickNumber = lastSent
 
-//        "clientLastReceivedStateTick=$clientLastReceivedStateTick, clientTickNumber=$clientTickNumber".log()
-        // until -> tick -1
+        // It goes from the start tick until the current tick getting all processed ticks
+        // since the last package sent
         for (tick in startTickNumber until clientTickNumber) {
             val input = this.clientInputBuffer[tick % BUFFER_SIZE]
+
+            // Verify if it was already sent
+            // I don't wanna send duplicated inputs for the same tick
             if (input?.canSend() == true) {
                 serverInputMessages.inputs.add(input)
             }
         }
 
+        // Informs the start tick to the package
         serverInputMessages.start_tick_number = startTickNumber
 
-        timer += deltaTime
-//        if (timer >= minTimeBetweenTicks) {
-        if (countToSend >= COUNT_TO_SEND) {
-            countToSend = 0
+        // It will trigger to send only when a specific numbers of tick is processed
+        if (ticksLoadedToSend >= COUNT_OF_TICKS_TO_SEND) {
+            // Reset the ticks to send
+            ticksLoadedToSend = 0
+
+            // Get the size of the message, for debug
             serverInputMessagesSize = serverInputMessages.inputs.size
+
+            // Keep the last sent tick
             serverInputMessages.inputs.lastOrNull()?.also {
                 lastSent = it.tick
             }
+
+            // Log
             "sending $startTickNumber".log()
             serverInputMessages.inputs.forEach {
                 it?.toString()?.log()
             }
-//            "sending=${serverInputMessagesSize}, lastSent=$lastSent, clientLastReceivedStateTick=$clientLastReceivedStateTick, clientTickNumber=$clientTickNumber".log()
+
+            // Send the ticks
             matchEvents.sendTheUpdatedState(serverInputMessages)
+
+            // Clear the list and the current inputs
             serverInputMessages.inputs.clear()
             serverInputMessages = InputWorldState()
         }
-        countToSend++
+
+        // For each tick updates its value
+        ticksLoadedToSend++
     }
 
-    // TODO: as I wanna to read all messages I'm going to:
-    //  Go to the old message, minor tick, it should be the the first item since it is a queue
-    //  Go through all and replace the client ticks
-    //  When reach to the newer message continue doing as it is already doing, it means that I'll do the rewind
     private fun processThePackageReceivedFromTheServerAndReconcileTheData(deltaTime: Double) {
         // Check if there is new messages
         if (clientStateMessages.size > 0) {
             // Use the newer message
-            // TODO: IT WON'T WORK FOR ME!! some messages must be read but it will be lost inside the package
-            //  because it will gone faster then the server can notify
-            //  example: if I shoot a near enemy the bullet will travel for few ticks and the collision
-            //           will be lost in case of it isn't the last message, so I need to READ ALL
 
             var bufferSlot: Int
 
+            // Replay the world state if necessary, then rewind the messages
             var rewindTickNumber = verifyAllMessagesAndReplayIfNeeds(deltaTime)
 
             // If some state was changed, do the rewind
@@ -288,7 +256,7 @@ class SceneManager(
 
                     "rewind tick=$rewindTickNumber, on bufferSlot=$bufferSlot".log()
 
-                    // Input that was processed at this slot
+                    // Get the inputs of the current buffer
                     val input = this.clientInputBuffer[bufferSlot]
 
                     // As the world was already replayed, I can create a current state (getting the replayed state)
@@ -301,14 +269,11 @@ class SceneManager(
                     // Reprocess the data
                     input?.let { scene.onWorldUpdated(input, deltaTime) }
 
-                    // Store the world state
+                    // Store the new world state
                     this.clientStatePostBuffer[bufferSlot] =
                         createCurrentWorldState(rewindTickNumber).apply {
                             "Current POST (rewinded) world at tick=$clientTickNumber -> ${this?.printPlayers()}".log()
                         }
-
-                    // Store the new world state
-//                    this.clientStateBuffer[bufferSlot] = createCurrentWorldState(rewindTickNumber)
 
                     rewindTickNumber++
                 }
@@ -318,6 +283,8 @@ class SceneManager(
 
     private fun verifyAllMessagesAndReplayIfNeeds(deltaTime: Double): Int {
         var lastTick = INVALID_ID
+
+        // Useful to log
         val possibleLastTick = clientStateMessages.lastOrNull()?.tick ?: INVALID_ID
 
         // Do it for all
@@ -325,59 +292,50 @@ class SceneManager(
             // Get the first message and delete it from the queue
             val stateMsg = clientStateMessages.remove()
 
+            // Calculate the current buffer
             val bufferSlot = stateMsg.tick % BUFFER_SIZE
 
-            // When the stick is bigger than the current tick, just replace it and ignore the rewind
+            // When the stick is bigger than the current tick, do the FORWARD
             if (stateMsg.tick > clientTickNumber) {
                 "Move forward on tick=${stateMsg.tick}, on bufferSlot=$bufferSlot, state=$stateMsg".log()
 
-//                // Store the world state, as I'm forcing a new one, I guess that it need to be get the "new"
+                // Store the current state
                 this.clientStatePreBuffer[bufferSlot] =
                     createCurrentWorldState(stateMsg.tick).apply {
                     "Current PRE (replayed) world at tick=$clientTickNumber -> ${this?.printPlayers()}".log()
                     }
 
+                // Move the world ahead updating it
                 scene.onWorldUpdated(stateMsg, deltaTime)
 
-                // Store the world state, as I'm forcing a new one, I guess that it need to be get the "new"
+                // Store the new world state
                 this.clientStatePostBuffer[bufferSlot] =
                     createCurrentWorldState(stateMsg.tick).apply {
                         "Current POST (replayed) world at tick=$clientTickNumber -> ${this?.printPlayers()}".log()
                     }
 
-                // Get the tick of the last message processed
+                // I'm not going to do the rewind, so I can returns the INVALID_ID
                 lastTick = INVALID_ID
 
                 // Increase the current tick, because I'm moving the game forward
                 clientTickNumber++
             } else {
-                // Check if there is some inconsistency on the data, to do so get the server data
-                // Calculate the position error
+                // Check if there is some inconsistency on the data, to do so
+                // get the server data and calculate the errors
                 val thereIsError = calculateError(stateMsg, bufferSlot)
 
-                // I'm letting this bullet check because if there is a bullet I need to update because the bullet
-                // is updated for the server
-                if (thereIsError || (stateMsg.bulletUpdate?.bullets?.size ?: 0) > 0
-                ) {
+                // If there is an error, replay the world
+                if (thereIsError) {
                     ("replay clientTickNumber=$clientTickNumber, " +
                             "stateMsg.tick=${stateMsg.tick}, " +
                             "last.tick=${possibleLastTick}, " +
                             "on bufferSlot=$bufferSlot, " +
                             "state=$stateMsg").log()
-//                "Correcting for error at tick ${stateMsg.tick} clientTickNumber=$clientTickNumber (rewinding ${(clientTickNumber - stateMsg.tick)} ticks) positionError=$positionError serverPosition=${serverPosition} clientPastPosition=${clientPastPosition}".log()
-
-                    // The pre world don't need to be changed, only the post, since I'm forcing a new state
-                    // unless I start to send the pre state from the server, as I'm not, I cannot know the
-                    // world state when I'm replaying because the world state can be built from a different state
-//                    this.clientStatePreBuffer[bufferSlot] =
-//                        createCurrentWorldState(stateMsg.tick).apply {
-//                            "Current PRE (replayed) world at tick=$clientTickNumber -> ${this?.printPlayers()}".log()
-//                        }
 
                     // Replay, it will force the world state to be equals to the server
                     scene.onWorldUpdated(stateMsg, deltaTime)
 
-                    // Store the world state, as I'm forcing a new one, I guess that it need to be get the "new"
+                    // Store the new world state
                     this.clientStatePostBuffer[bufferSlot] =
                         createCurrentWorldState(stateMsg.tick).apply {
                             "Current POST (replayed) world at tick=$clientTickNumber -> ${this?.printPlayers()}".log()
@@ -393,37 +351,30 @@ class SceneManager(
     }
 
     private fun calculateError(stateMsg: WorldState, bufferSlot: Int): Boolean {
-        // Force a forward in case of the server is ahead the client
-//        if (stateMsg.tick >= clientTickNumber) {
-//            clientTickNumber++
-//            "go forward".log()
-//            return true
-//        }
+        // Get the result of the world of the current buffer
+        val localState = this.clientStatePostBuffer[bufferSlot]
+        "localState POST used to compare the error=$localState".log()
 
-        // Get the buffer slot meant to the server message
-        // It can be (at least must be) a value in the past, it will be a bufferSlot previous to the
-        // current bufferSlot processed at this update
-
-//        val players  = scene.getEnemies()
-//        scene.getPlayer()?.also {
-//            players.add(it)
-//        }
-        val localStatePost = this.clientStatePostBuffer[bufferSlot]
-        val localStatePre = this.clientStatePreBuffer[bufferSlot]
-        val localState = localStatePost
-//        "localState PRE used to compare the error=$localStatePre".log()
-        "localState POST used to compare the error=$localStatePost".log()
-
+        // If they have a different tick, ignores it
         if (stateMsg.tick != localState?.tick) return false
 
+        // Retrieve the local players
         val localPlayers = localState.playerUpdate.players
 
+        // Do it to all players
         stateMsg.playerUpdate.players.forEach { remotePlayer ->
+
             for (player in localPlayers) {
+
+                // Check if the player of the server is equals to the local player
                 if (remotePlayer.id == player.id) {
+
+                    // Calculate the distance between them
                     val distance = player.playerMovement.position.distance(
                         remotePlayer.playerMovement.position
                     )
+
+                    // Check if the error is tolerable
                     if (distance > ERROR_POSITION_FACTOR
                     ) {
                         ("distance error $distance, " +
@@ -442,6 +393,8 @@ class SceneManager(
                         return true
                     }
 
+                    // Calculate if the angles are different
+                    // TODO: if I start to use delta or interpolation, do something like the distance
                     if (player.playerAim.angle != remotePlayer.playerAim.angle
                         || player.playerAim.strength != remotePlayer.playerAim.strength
                         || player.playerGunPointer.angle != remotePlayer.playerGunPointer.angle
@@ -457,7 +410,10 @@ class SceneManager(
             }
         }
 
-        return false
+        // If there is any bullet to update, then force the new state
+        // TODO: force the update only to the bullets latter, or at least check one by one if necessary
+        //  maybe not because the bullets are gonna change on all ticks
+        return (stateMsg.bulletUpdate?.bullets?.size ?: 0) > 0
     }
 
     private fun stopGame(id: String) {

@@ -13,6 +13,7 @@ import com.rittmann.myapplication.main.entity.Bullet
 import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.Position
 import com.rittmann.myapplication.main.entity.server.InputsState
+import com.rittmann.myapplication.main.entity.server.PlayerServer
 import com.rittmann.myapplication.main.entity.server.WorldState
 import com.rittmann.myapplication.main.match.MatchEvents
 import com.rittmann.myapplication.main.match.screen.GLOBAL_TAG
@@ -94,7 +95,6 @@ class SceneMain(
     }
 
     override fun finishFrame() {
-//        "finishFrame=${_bulletsToSend.size}".log()
         _bulletsToSend.clear()
     }
 
@@ -134,42 +134,17 @@ class SceneMain(
         joystickAim.set(angle, strength)
     }
 
-    // It will force a state, used to replay a stat
+    // It will force a state, used to replay a world state
     override fun onWorldUpdated(worldState: WorldState, deltaTime: Double) {
         worldState.playerUpdate.players.forEach { playerServer ->
             if (playerServer.id == player?.playerId) {
                 player?.also { player ->
-                    player.move(
-                        deltaTime,
-                        playerServer.playerMovement.angle,
-                        playerServer.playerMovement.strength,
-                        playerServer.playerMovement.position,
-                    )
-
-                    player.aim(
-                        playerServer.playerAim.angle,
-                        playerServer.playerAim.strength,
-                    )
+                    updatePlayerPosition(playerServer, player, deltaTime)
                 }
             } else {
-//                enemies.forEach {
-//                    "enemy=${it.playerId}, playerServer=${playerServer.id}, hostPlayer=${player?.playerId}".log()
-//                }
-                // I'm going to use the above move here
                 val enemy = enemies.firstOrNull { it.playerId == playerServer.id }
-
                 enemy?.also { player ->
-                    player.move(
-                        deltaTime,
-                        playerServer.playerMovement.angle,
-                        playerServer.playerMovement.strength,
-                        playerServer.playerMovement.position,
-                    )
-
-                    player.aim(
-                        playerServer.playerAim.angle,
-                        playerServer.playerAim.strength,
-                    )
+                    updatePlayerPosition(playerServer, player, deltaTime)
                 }
             }
         }
@@ -216,6 +191,7 @@ class SceneMain(
 
     // It will run a new state based on the inputs
     override fun onWorldUpdated(inputsState: InputsState, deltaTime: Double) = with(inputsState) {
+        // Handle the movement and the aiming
         player?.also { player ->
             player.move(
                 deltaTime,
@@ -235,6 +211,7 @@ class SceneMain(
             }
         }
 
+        // Update the bullet state
         updateBullets(deltaTime)
     }
 
@@ -244,6 +221,20 @@ class SceneMain(
 
     override fun getBulletsToSend(tick: Int): List<Bullet> {
         return _bulletsToSend
+    }
+
+    private fun updatePlayerPosition(playerServer: PlayerServer, player: Player, deltaTime: Double) {
+        player.move(
+            deltaTime,
+            playerServer.playerMovement.angle,
+            playerServer.playerMovement.strength,
+            playerServer.playerMovement.position,
+        )
+
+        player.aim(
+            playerServer.playerAim.angle,
+            playerServer.playerAim.strength,
+        )
     }
 
     private fun createNewBullet(bullet: Bullet) {
