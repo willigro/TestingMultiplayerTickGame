@@ -20,7 +20,8 @@ interface Scene {
     fun onJoystickMovementChanged(angle: Double, strength: Double)
     fun onJoystickAimChanged(angle: Double, strength: Double)
     fun onWorldUpdated(worldState: WorldState, deltaTime: Double)
-    fun onWorldUpdated(inputsState: InputsState, deltaTime: Double)
+    fun onWorldUpdated(worldState: WorldState, errors: List<SceneManager.Error>, deltaTime: Double)
+    fun onWorldUpdated(inputsState: InputsState, deltaTime: Double, tick: Int)
     fun getEnemies(): ArrayList<Player>
     fun getBulletsToSend(tick: Int): List<Bullet>
 }

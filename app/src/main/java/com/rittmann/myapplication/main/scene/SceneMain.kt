@@ -134,7 +134,8 @@ class SceneMain(
         joystickAim.set(angle, strength)
     }
 
-    // It will force a state, used to replay a world state
+    // It will force a state, used to FORWARD
+    // TODO: simplify it cause it will force everything without check because the forward is a hard replace
     override fun onWorldUpdated(worldState: WorldState, deltaTime: Double) {
         worldState.playerUpdate.players.forEach { playerServer ->
             if (playerServer.id == player?.playerId) {
@@ -148,71 +149,180 @@ class SceneMain(
                 }
             }
         }
+        "".log()
 
-        worldState.bulletUpdate?.bullets?.also { bullets ->
-            for (bullet in bullets) {
-                // The local bullets are only representative, I don't need to handle it properly for a while
-                // TODO: I guess that if cause a small error the bullet don't collide with the right body
-                //  (colliding on server but does not colliding locale) I will need to check if the bullet is still alive
-                //  for that I'll need the bullet ID
-                if (bullet.ownerId == player?.playerId) {
-                    continue
+        _bulletsInGame.forEach {
+            "At tick=${worldState.tick}, IN GAME position=${it.position}".log()
+        }
+
+        worldState.bulletUpdate?.bulletsToRemove?.forEach { bulletToRemove ->
+            val index = _bulletsInGame.indexOfFirst { it.bulletId == bulletToRemove.bulletId }
+            if (index != INVALID_ID) {
+                "At tick=${worldState.tick}, REMOVE the bullet at position=${_bulletsInGame[index].position}".log()
+                _bulletsInGame.removeAt(index)
+            }
+        }
+        worldState.bulletUpdate?.bullets?.forEach { bullet ->
+            "At tick=${worldState.tick}, REMOTE position=${bullet.position}".log()
+            // The local bullets are only representative, I don't need to handle it properly for a while
+            // TODO: I guess that if cause a small error the bullet don't collide with the right body
+            //  (colliding on server but does not colliding locale) I will need to check if the bullet is still alive
+            //  for that I'll need the bullet ID
+//                if (bullet.ownerId == player?.playerId) {
+//                    continue
+//                }
+
+//                "processing the bullet=$bullet".log()
+
+            var found = false
+            for (i in 0 until _bulletsInGame.size) {
+                if (_bulletsInGame[i].bulletId == bullet.bulletId) {
+                    "At tick=${worldState.tick}, replacing the bullet position=${bullet.position}".log()
+                    found = true
+                    _bulletsInGame[i] = Bullet(
+                        bulletId = bullet.bulletId,
+                        ownerId = bullet.ownerId,
+                        position = Position(
+                            x = bullet.position.x,
+                            y = bullet.position.y
+                        ),
+                        angle = bullet.angle,
+                        velocity = BULLET_DEFAULT_VELOCITY,
+                        maxDistance = BULLET_DEFAULT_MAX_DISTANCE,
+                    ).apply {
+                        initialPosition = bullet.initialPosition
+                    }
+                    break
                 }
+            }
 
-                "processing the bullet=$bullet".log()
+            // create a new one
+            if (found.not()) {
+                "At tick=${worldState.tick}, adding the bullet position=${bullet.position}".log()
+                _bulletsInGame.add(
+                    Bullet(
+                        bulletId = bullet.bulletId,
+                        ownerId = bullet.ownerId,
+                        position = Position(
+                            x = bullet.position.x,
+                            y = bullet.position.y
+                        ),
+                        angle = bullet.angle,
+                        velocity = BULLET_DEFAULT_VELOCITY,
+                        maxDistance = BULLET_DEFAULT_MAX_DISTANCE,
+                    ).apply {
+                        initialPosition = bullet.initialPosition
+                    }
+                )
+            }
+        }
+
+        _bulletsInGame.forEach {
+            ("Tick " + SceneManager.tickNumberBeenProcessed +
+                    " From=" + SceneManager.processState +
+                    " Bullet=" + it.bulletId +
+                    " New X=" + it.position.x +
+                    " New Y=" + it.position.y + " bulletMoving").log()
+        }
+    }
+
+    // It will force a state when there is an error, used to REPLAY and REWIND
+    override fun onWorldUpdated(
+        worldState: WorldState,
+        errors: List<SceneManager.Error>,
+        deltaTime: Double
+    ) {
+        val allPlayers = arrayListOf<Player>()
+        allPlayers.addAll(enemies)
+        player?.let { allPlayers.add(it) }
+
+        // TODO: check one a one later seeing if it was a ANGLE or POSITION
+        worldState.playerUpdate.players.forEach { playerServer ->
+
+            if (errors.firstOrNull { it.id == playerServer.id } != null) {
+
+                val player = allPlayers.firstOrNull { it.playerId == playerServer.id }
+
+                player?.also {
+                    updatePlayerPosition(playerServer, player, deltaTime)
+                }
+            }
+        }
+
+        "".log()
+
+        _bulletsInGame.forEach {
+            "At tick=${worldState.tick}, IN GAME position=${it.position}".log()
+        }
+
+        worldState.bulletUpdate?.bulletsToRemove?.forEach { bulletToRemove ->
+            val index = _bulletsInGame.indexOfFirst { it.bulletId == bulletToRemove.bulletId }
+            if (index != INVALID_ID) {
+                "At tick=${worldState.tick}, REMOVE the bullet at position=${_bulletsInGame[index].position}".log()
+                _bulletsInGame.removeAt(index)
+            }
+        }
+
+        if (errors.firstOrNull { it is SceneManager.Error.BulletPositionError || it is SceneManager.Error.BulletNotFoundError } != null) {
+            worldState.bulletUpdate?.bullets?.forEach { remoteBullet ->
+                "At tick=${worldState.tick}, REMOTE position=${remoteBullet.position}".log()
 
                 var found = false
                 for (i in 0 until _bulletsInGame.size) {
-                    if (_bulletsInGame[i].bulletId == bullet.bulletId) {
+                    if (_bulletsInGame[i].bulletId == remoteBullet.bulletId) {
+                        "At tick=${worldState.tick}, replacing the bullet position=${remoteBullet.position}".log()
                         found = true
+                        _bulletsInGame[i] = Bullet.build(remoteBullet)
                         break
                     }
                 }
 
                 // create a new one
                 if (found.not()) {
+                    "At tick=${worldState.tick}, adding the bullet position=${remoteBullet.position}".log()
                     _bulletsInGame.add(
-                        Bullet(
-                            bulletId = bullet.bulletId,
-                            ownerId = bullet.ownerId,
-                            position = Position(
-                                x = bullet.position.x,
-                                y = bullet.position.y
-                            ),
-                            angle = bullet.angle,
-                            velocity = BULLET_DEFAULT_VELOCITY,
-                            maxDistance = BULLET_DEFAULT_MAX_DISTANCE,
-                        )
+                        Bullet.build(remoteBullet)
                     )
                 }
             }
         }
+
+        _bulletsInGame.forEach {
+            ("Tick " + SceneManager.tickNumberBeenProcessed +
+                    " From=" + SceneManager.processState +
+                    " Bullet=" + it.bulletId +
+                    " New X=" + it.position.x +
+                    " New Y=" + it.position.y + " bulletMoving").log()
+        }
     }
 
     // It will run a new state based on the inputs
-    override fun onWorldUpdated(inputsState: InputsState, deltaTime: Double) = with(inputsState) {
-        // Handle the movement and the aiming
-        player?.also { player ->
-            player.move(
-                deltaTime,
-                playerInputsState.playerMovementInputsState.angle,
-                playerInputsState.playerMovementInputsState.strength,
-            )
+    override fun onWorldUpdated(inputsState: InputsState, deltaTime: Double, tick: Int) {
+        inputsState.apply {
 
-            player.aim(
-                playerInputsState.playerAimInputsState.angle,
-                playerInputsState.playerAimInputsState.strength,
-            )
+            // Handle the movement and the aiming
+            player?.also { player ->
+                player.move(
+                    deltaTime,
+                    playerInputsState.playerMovementInputsState.angle,
+                    playerInputsState.playerMovementInputsState.strength,
+                )
 
-            if (player.aimStrength > MIN_STRENGTH_TO_SHOT) {
-                player.shoot()?.also { bullet ->
-                    createNewBullet(bullet)
+                player.aim(
+                    playerInputsState.playerAimInputsState.angle,
+                    playerInputsState.playerAimInputsState.strength,
+                )
+
+                if (player.aimStrength > MIN_STRENGTH_TO_SHOT) {
+                    player.shoot(tick)?.also { bullet ->
+                        createNewBullet(bullet)
+                    }
                 }
             }
-        }
 
-        // Update the bullet state
-        updateBullets(deltaTime)
+            // Update the bullet state
+            updateBullets(deltaTime)
+        }
     }
 
     override fun getEnemies(): ArrayList<Player> {
@@ -223,7 +333,11 @@ class SceneMain(
         return _bulletsToSend
     }
 
-    private fun updatePlayerPosition(playerServer: PlayerServer, player: Player, deltaTime: Double) {
+    private fun updatePlayerPosition(
+        playerServer: PlayerServer,
+        player: Player,
+        deltaTime: Double
+    ) {
         player.move(
             deltaTime,
             playerServer.playerMovement.angle,

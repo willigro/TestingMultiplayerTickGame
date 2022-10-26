@@ -5,7 +5,7 @@ import com.rittmann.myapplication.main.match.screen.GLOBAL_TAG
 
 interface Logger {
 
-    fun String.log(tag: String = javaClass.simpleName, breakLine: Boolean = true) {
+    fun String.log(tag: String = javaClass.simpleName, breakLine: Boolean = false) {
 //        Thread.currentThread().stackTrace.forEach {
 //            Log.i(GLOBAL_TAG, "methodName=${it.methodName}")
 //        }

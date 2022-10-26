@@ -15,10 +15,11 @@ data class WorldState(
     val alreadyProcessed: AtomicBoolean = AtomicBoolean(false)
 
     fun printPlayers(): String {
+        var a = ""
         playerUpdate.players.forEach {
-            "Id=${it.id} position=${it.playerMovement}".log()
+            a += "\nId=${it.id} position=${it.playerMovement}"
         }
-        return ""
+        return a
     }
 
     override fun equals(other: Any?): Boolean {
@@ -80,7 +81,8 @@ data class WorldState(
 }
 
 data class BulletUpdate(
-    val bullets: List<Bullet>
+    val bullets: List<Bullet>,
+    val bulletsToRemove: List<Bullet> = arrayListOf(),
 )
 
 data class PlayerUpdate(

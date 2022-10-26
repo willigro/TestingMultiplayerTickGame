@@ -7,6 +7,7 @@ import com.rittmann.myapplication.main.draw.DrawObject
 import com.rittmann.myapplication.main.entity.body.Body
 import com.rittmann.myapplication.main.entity.collisor.Collidable
 import com.rittmann.myapplication.main.entity.collisor.Collider
+import com.rittmann.myapplication.main.scene.SceneManager
 import com.rittmann.myapplication.main.utils.Logger
 
 private const val BULLET_SIZE = 15
@@ -22,7 +23,7 @@ data class Bullet(
     var velocity: Double,
 ) : DrawObject, Collidable, Logger {
 
-    private var initialPosition: Position = position.copy()
+    var initialPosition: Position = position.copy()
     private val body: Body = Body(position.copy(), BULLET_SIZE, BULLET_SIZE).apply {
         setRotation(angle)
     }
@@ -38,10 +39,23 @@ data class Bullet(
             angle
         )
 
+        val preX = position.x
+        val preY = position.y
+
         val x = normalizedPosition.x * velocity * deltaTime
         val y = normalizedPosition.y * velocity * deltaTime
 
         position.sum(x, y)
+
+        ("Tick " + SceneManager.tickNumberBeenProcessed +
+                " From=" + SceneManager.processState +
+                " Bullet=" + bulletId +
+//                " Angle=" + angle +
+//                " Velocity=" + velocity +
+                " Pre X=" + preX +
+                " Pre Y=" + preY +
+                " New X=" + position.x +
+                " New Y=" + position.y + " bulletMoving").log()
 
         body.move(position)
         collider.move(position)
@@ -85,5 +99,21 @@ data class Bullet(
         body.setRotation(angle)
         maxDistance = bullet.maxDistance
         velocity = bullet.velocity
+    }
+
+    companion object {
+        fun build(bullet: Bullet) = Bullet(
+            bulletId = bullet.bulletId,
+            ownerId = bullet.ownerId,
+            position = Position(
+                x = bullet.position.x,
+                y = bullet.position.y
+            ),
+            angle = bullet.angle,
+            velocity = BULLET_DEFAULT_VELOCITY,
+            maxDistance = BULLET_DEFAULT_MAX_DISTANCE,
+        ).apply {
+            initialPosition = bullet.initialPosition
+        }
     }
 }

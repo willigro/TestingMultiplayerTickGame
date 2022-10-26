@@ -1,6 +1,5 @@
 package com.rittmann.myapplication.main.server
 
-import android.util.Log
 import com.rittmann.myapplication.main.entity.Bullet
 import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.Position
@@ -11,7 +10,6 @@ import com.rittmann.myapplication.main.entity.server.PlayerMovement
 import com.rittmann.myapplication.main.entity.server.PlayerServer
 import com.rittmann.myapplication.main.entity.server.PlayerUpdate
 import com.rittmann.myapplication.main.entity.server.WorldState
-import com.rittmann.myapplication.main.match.screen.GLOBAL_TAG
 import org.json.JSONObject
 
 fun JSONObject.mapToPlayer(): Player {
@@ -71,12 +69,27 @@ fun JSONObject.mapToWorldUpdate(): WorldState {
         )
     }
 
+    val bullets = extractBullets("bullets")
+    val bulletsToRemove = extractBullets("bulletsToRemove")
+
+    return WorldState(
+        tick = this.getInt("tick"),
+        playerUpdate = PlayerUpdate(players = players),
+        bulletUpdate = BulletUpdate(
+            bullets = bullets,
+            bulletsToRemove = bulletsToRemove
+        ),
+    )
+}
+
+fun JSONObject.extractBullets(json: String): List<Bullet> {
     val bullets = arrayListOf<Bullet>()
-    val bulletListJson = this.getJSONArray("bullets")
+    val bulletListJson = this.getJSONArray(json)
     for (i in 0 until bulletListJson.length()) {
         val bulletJson = bulletListJson.getJSONObject(i)
 
         val positionJson = bulletJson.getJSONObject(DATA_PLAYER_POSITION)
+        val initialPositionJson = bulletJson.getJSONObject("initialPosition")
 
         bullets.add(
             Bullet(
@@ -91,21 +104,15 @@ fun JSONObject.mapToWorldUpdate(): WorldState {
                 velocity = bulletJson.getDouble("velocity"),
             ).apply {
                 ownerId = bulletJson.getString("owner")
+                initialPosition = Position(
+                    x = initialPositionJson.getDouble(DATA_PLAYER_POSITION_X),
+                    y = initialPositionJson.getDouble(DATA_PLAYER_POSITION_Y),
+                )
             }
         )
     }
 
-//    if (bullets.size > 0) {
-//        Log.i(GLOBAL_TAG, "tick=${this.getInt("tick")} bullet=${bullets.size}")
-//    }
-
-//    Log.i(GLOBAL_TAG, "bullets.size=${bullets.size}")
-
-    return WorldState(
-        tick = this.getInt("tick"),
-        playerUpdate = PlayerUpdate(players = players),
-        bulletUpdate = BulletUpdate(bullets = bullets),
-    )
+    return bullets
 }
 
 

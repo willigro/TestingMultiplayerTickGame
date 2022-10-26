@@ -29,6 +29,10 @@ private const val BUFFER_SIZE = 1024
 private const val ERROR_POSITION_FACTOR = 0.001
 private const val COUNT_OF_TICKS_TO_SEND = 2
 
+enum class ProcessState {
+    NORMAL, REPLAY, REWIND, FORWARD
+}
+
 class SceneManager(
     private val matchEvents: MatchEvents,
 ) : Logger {
@@ -36,9 +40,11 @@ class SceneManager(
     // sharing to use on logs
     companion object {
         var clientTickNumber = 0
+        var tickNumberBeenProcessed = 0
         var clientLastReceivedStateTick = 0
         var clientStateMessagesSize = 0
         var serverInputMessagesSize = 0
+        var processState: ProcessState = ProcessState.NORMAL
     }
 
     private val scene: Scene
@@ -157,6 +163,9 @@ class SceneManager(
     }
 
     private fun processTheCurrentInputAndRunTheWorldUsingThem(deltaTime: Double) {
+        processState = ProcessState.NORMAL
+        tickNumberBeenProcessed = clientTickNumber
+
         // Get the current buffer base on the current tick
         val bufferSlot = clientTickNumber % BUFFER_SIZE
 
@@ -171,7 +180,7 @@ class SceneManager(
         }
 
         // Process the world with the current inputs
-        currentInputs?.let { input -> scene.onWorldUpdated(input, deltaTime) }
+        currentInputs?.let { input -> scene.onWorldUpdated(input, deltaTime, clientTickNumber) }
 
         // Store the current world state processed that used the current inputs
         // This way I can know the result of the PRE loaded world + the current inputs and keep the
@@ -182,6 +191,8 @@ class SceneManager(
 
         // As the information about the bullet are important to send through the inputs
         // I'm going to try to get the bullets after the world evaluation, and then store the inputs
+        // The reason why I'm doing it is because the "inputs of the bullets" are created using the
+        // data about the already created bullet, that's why I need to run it after process the world
         this.clientInputBuffer[bufferSlot] = currentInputs?.copy(
             bulletInputsState = createBulletInputsState(clientTickNumber)
         )?.resetCanSend()
@@ -250,7 +261,12 @@ class SceneManager(
             // If some state was changed, do the rewind
             if (rewindTickNumber != INVALID_ID) {
 
+                rewindTickNumber += 1
+
                 while (rewindTickNumber <= clientTickNumber) {
+                    processState = ProcessState.REWIND
+                    tickNumberBeenProcessed = rewindTickNumber
+
                     // Buffer slot to rewind
                     bufferSlot = rewindTickNumber % BUFFER_SIZE
 
@@ -263,16 +279,16 @@ class SceneManager(
                     // Store the world state
                     this.clientStatePreBuffer[bufferSlot] =
                         createCurrentWorldState(rewindTickNumber).apply {
-                            "Current PRE (rewinded) world at tick=$clientTickNumber -> ${this?.printPlayers()}".log()
+                            "Current PRE (rewinded) world at tick=$clientTickNumber, rewinded tick=${rewindTickNumber} -> ${this?.printPlayers()}".log()
                         }
 
                     // Reprocess the data
-                    input?.let { scene.onWorldUpdated(input, deltaTime) }
+                    input?.let { scene.onWorldUpdated(input, deltaTime, clientTickNumber) }
 
                     // Store the new world state
                     this.clientStatePostBuffer[bufferSlot] =
                         createCurrentWorldState(rewindTickNumber).apply {
-                            "Current POST (rewinded) world at tick=$clientTickNumber -> ${this?.printPlayers()}".log()
+                            "Current POST (rewinded) world at tick=$clientTickNumber, rewinded tick=${rewindTickNumber} -> ${this?.printPlayers()}".log()
                         }
 
                     rewindTickNumber++
@@ -297,12 +313,15 @@ class SceneManager(
 
             // When the stick is bigger than the current tick, do the FORWARD
             if (stateMsg.tick > clientTickNumber) {
+                processState = ProcessState.FORWARD
+                tickNumberBeenProcessed = stateMsg.tick
+
                 "Move forward on tick=${stateMsg.tick}, on bufferSlot=$bufferSlot, state=$stateMsg".log()
 
                 // Store the current state
                 this.clientStatePreBuffer[bufferSlot] =
                     createCurrentWorldState(stateMsg.tick).apply {
-                    "Current PRE (replayed) world at tick=$clientTickNumber -> ${this?.printPlayers()}".log()
+                        "Current PRE (replayed) world at tick=$clientTickNumber, forward tick=${stateMsg.tick} -> ${this?.printPlayers()}".log()
                     }
 
                 // Move the world ahead updating it
@@ -311,7 +330,7 @@ class SceneManager(
                 // Store the new world state
                 this.clientStatePostBuffer[bufferSlot] =
                     createCurrentWorldState(stateMsg.tick).apply {
-                        "Current POST (replayed) world at tick=$clientTickNumber -> ${this?.printPlayers()}".log()
+                        "Current POST (replayed) world at tick=$clientTickNumber, forward tick=${stateMsg.tick} -> ${this?.printPlayers()}".log()
                     }
 
                 // I'm not going to do the rewind, so I can returns the INVALID_ID
@@ -322,23 +341,33 @@ class SceneManager(
             } else {
                 // Check if there is some inconsistency on the data, to do so
                 // get the server data and calculate the errors
-                val thereIsError = calculateError(stateMsg, bufferSlot)
+                val errors = calculateError(stateMsg, bufferSlot)
 
                 // If there is an error, replay the world
-                if (thereIsError) {
+                if (errors.isNotEmpty()) {
+                    processState = ProcessState.REPLAY
+                    tickNumberBeenProcessed = stateMsg.tick
+
+                    // FIXME: I need to join the world states locally and remote, because the remote can be changing only one player
+                    //  - First: I'm going to change only what is wrong
+                    //  - Second: Test using 3 players, because I guess that I need to join the state to guarantee that the replay will
+                    //            consider all states
+
                     ("replay clientTickNumber=$clientTickNumber, " +
                             "stateMsg.tick=${stateMsg.tick}, " +
                             "last.tick=${possibleLastTick}, " +
                             "on bufferSlot=$bufferSlot, " +
-                            "state=$stateMsg").log()
+                            "\ninputs=${clientInputBuffer[bufferSlot]}, " +
+                            "\nlocal state POST=${clientStatePostBuffer[bufferSlot]}, " +
+                            "\nremote state=$stateMsg").log()
 
                     // Replay, it will force the world state to be equals to the server
-                    scene.onWorldUpdated(stateMsg, deltaTime)
+                    scene.onWorldUpdated(stateMsg, errors, deltaTime)
 
                     // Store the new world state
                     this.clientStatePostBuffer[bufferSlot] =
                         createCurrentWorldState(stateMsg.tick).apply {
-                            "Current POST (replayed) world at tick=$clientTickNumber -> ${this?.printPlayers()}".log()
+                            "Current POST (replayed) world at tick=$clientTickNumber, replayed tick=${stateMsg.tick}-> ${this?.printPlayers()}".log()
                         }
 
                     // Get the tick of the last message processed
@@ -350,16 +379,28 @@ class SceneManager(
         return lastTick
     }
 
-    private fun calculateError(stateMsg: WorldState, bufferSlot: Int): Boolean {
+    sealed class Error(val id: String) {
+        data class PlayerPositionError(val playerId: String) : Error(playerId)
+        data class PlayerAngleError(val playerId: String) : Error(playerId)
+        data class BulletPositionError(val bulletId: String) : Error(bulletId)
+        data class BulletNotFoundError(val bulletId: String) : Error(bulletId)
+    }
+
+    private fun calculateError(stateMsg: WorldState, bufferSlot: Int): List<Error> {
         // Get the result of the world of the current buffer
         val localState = this.clientStatePostBuffer[bufferSlot]
         "localState POST used to compare the error=$localState".log()
 
         // If they have a different tick, ignores it
-        if (stateMsg.tick != localState?.tick) return false
+        if (stateMsg.tick != localState?.tick) return arrayListOf()
+
+        val errors = arrayListOf<Error>()
 
         // Retrieve the local players
         val localPlayers = localState.playerUpdate.players
+
+        // Retrieve the local bullets
+        val localBullets = localState.bulletUpdate?.bullets ?: arrayListOf()
 
         // Do it to all players
         stateMsg.playerUpdate.players.forEach { remotePlayer ->
@@ -377,7 +418,7 @@ class SceneManager(
                     // Check if the error is tolerable
                     if (distance > ERROR_POSITION_FACTOR
                     ) {
-                        ("distance error $distance, " +
+                        ("Error on: player distance $distance, " +
                                 "player=${player.id}, " +
                                 "current tick=${clientTickNumber}, " +
                                 "stateMsg.tick=${stateMsg.tick}, " +
@@ -390,7 +431,7 @@ class SceneManager(
                                 ).log()
 
 //                        stopGame(player.id)
-                        return true
+                        errors.add(Error.PlayerPositionError(player.id))
                     }
 
                     // Calculate if the angles are different
@@ -401,19 +442,31 @@ class SceneManager(
                         || player.playerMovement.angle != remotePlayer.playerMovement.angle
                         || player.playerMovement.strength != remotePlayer.playerMovement.strength
                     ) {
-                        "angles error, player=${player.id}".log()
-                        return true
+                        "Error on: player angles, player=${player.id}".log()
+                        errors.add(Error.PlayerAngleError(player.id))
                     }
-
-                    break
                 }
             }
         }
 
-        // If there is any bullet to update, then force the new state
-        // TODO: force the update only to the bullets latter, or at least check one by one if necessary
-        //  maybe not because the bullets are gonna change on all ticks
-        return (stateMsg.bulletUpdate?.bullets?.size ?: 0) > 0
+        if (localBullets.isNotEmpty()) {
+            // If there is any bullet to update, then force the new state
+            stateMsg.bulletUpdate?.bullets?.forEach { remoteBullet ->
+                val localBullet = localBullets.firstOrNull { it.bulletId == remoteBullet.bulletId }
+
+                if (localBullet == null) {
+                    "Error on: bullet not found, bullet=${remoteBullet.bulletId}".log()
+                    errors.add(Error.BulletNotFoundError(remoteBullet.bulletId))
+                } else {
+                    if (localBullet.position.distance(remoteBullet.position) > ERROR_POSITION_FACTOR) {
+                        "Error on: bullet distance, bullet=${remoteBullet.bulletId}".log()
+                        errors.add(Error.BulletPositionError(localBullet.bulletId))
+                    }
+                }
+            }
+        }
+
+        return errors
     }
 
     private fun stopGame(id: String) {
