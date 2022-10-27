@@ -95,7 +95,7 @@ class SceneMain(
     }
 
     override fun finishFrame() {
-        _bulletsToSend.clear()
+//        _bulletsToSend.clear()
     }
 
     override fun receiveTouch(motionEvent: MotionEvent) {
@@ -364,6 +364,9 @@ class SceneMain(
             if (currentBullet.isFree(deltaTime)) {
                 currentBullet.free()
                 bulletIterator.remove()
+
+                val index = _bulletsToSend.indexOfFirst { it.bulletId == currentBullet.bulletId }
+                _bulletsToSend.removeAt(index)
             } else {
                 currentBullet.update(deltaTime)
             }

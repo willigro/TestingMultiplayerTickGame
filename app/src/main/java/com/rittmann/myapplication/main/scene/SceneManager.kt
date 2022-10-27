@@ -23,6 +23,7 @@ import com.rittmann.myapplication.main.server.ConnectionControlListeners
 import com.rittmann.myapplication.main.utils.INVALID_ID
 import com.rittmann.myapplication.main.utils.Logger
 import java.util.*
+import kotlin.collections.ArrayList
 
 // KEEP IT EQUALS TO THE SERVER
 private const val BUFFER_SIZE = 1024
@@ -353,21 +354,25 @@ class SceneManager(
                     //  - Second: Test using 3 players, because I guess that I need to join the state to guarantee that the replay will
                     //            consider all states
 
+                    val combinedState = combineState(stateMsg, bufferSlot) ?: continue
+
                     ("replay clientTickNumber=$clientTickNumber, " +
                             "stateMsg.tick=${stateMsg.tick}, " +
                             "last.tick=${possibleLastTick}, " +
                             "on bufferSlot=$bufferSlot, " +
                             "\ninputs=${clientInputBuffer[bufferSlot]}, " +
                             "\nlocal state POST=${clientStatePostBuffer[bufferSlot]}, " +
-                            "\nremote state=$stateMsg").log()
+                            "\nremote state=$stateMsg, " +
+                            "\ncombined state=$combinedState, " +
+                            "\nerrors=$errors").log()
 
                     // Replay, it will force the world state to be equals to the server
-                    scene.onWorldUpdated(stateMsg, errors, deltaTime)
+                    scene.onWorldUpdated(combinedState, deltaTime)
 
                     // Store the new world state
                     this.clientStatePostBuffer[bufferSlot] =
-                        createCurrentWorldState(stateMsg.tick).apply {
-                            "Current POST (replayed) world at tick=$clientTickNumber, replayed tick=${stateMsg.tick}-> ${this?.printPlayers()}".log()
+                        createCurrentWorldState(combinedState.tick).apply {
+                            "Current POST (replayed) world at tick=$clientTickNumber, replayed tick=${combinedState.tick}-> ${this?.printPlayers()}".log()
                         }
 
                     // Get the tick of the last message processed
@@ -377,6 +382,40 @@ class SceneManager(
         }
 
         return lastTick
+    }
+
+    private fun combineState(stateMsg: WorldState?, bufferSlot: Int): WorldState? {
+        if (stateMsg == null) return null
+
+        val localState = clientStatePostBuffer[bufferSlot]
+
+        if (localState == null || localState.tick != stateMsg.tick) return null
+
+        val remotePLayers = stateMsg.playerUpdate.players
+        val localPlayers = localState.playerUpdate.players
+
+        val newPlayers = arrayListOf<PlayerServer>()
+        newPlayers.addAll(remotePLayers)
+
+        // added the states that are lacking
+        for (localPlayer in localPlayers) {
+            var found = false
+            for (remotePlayer in remotePLayers) {
+                if (remotePlayer.id == localPlayer.id) {
+                    found = true
+                }
+            }
+
+            if (found.not()) {
+                newPlayers.add(localPlayer.copy())
+            }
+        }
+
+        return WorldState(
+            tick = stateMsg.tick,
+            bulletUpdate = stateMsg.bulletUpdate,
+            playerUpdate = PlayerUpdate(players = newPlayers),
+        )
     }
 
     sealed class Error(val id: String) {
@@ -389,7 +428,7 @@ class SceneManager(
     private fun calculateError(stateMsg: WorldState, bufferSlot: Int): List<Error> {
         // Get the result of the world of the current buffer
         val localState = this.clientStatePostBuffer[bufferSlot]
-        "localState POST used to compare the error=$localState".log()
+        "\nlocalState POST used to compare the error=$localState".log()
 
         // If they have a different tick, ignores it
         if (stateMsg.tick != localState?.tick) return arrayListOf()
@@ -419,15 +458,15 @@ class SceneManager(
                     if (distance > ERROR_POSITION_FACTOR
                     ) {
                         ("Error on: player distance $distance, " +
-                                "player=${player.id}, " +
-                                "current tick=${clientTickNumber}, " +
-                                "stateMsg.tick=${stateMsg.tick}, " +
-                                "on bufferSlot=$bufferSlot, " +
-                                "localState.tick=${localState.tick}, " +
-                                "positionLocal=${player.playerMovement.position}, " +
-                                "angleLocal=${player.playerMovement.angle}, " +
-                                "positionRemote=${remotePlayer.playerMovement.position} " +
-                                "angleRemote=${remotePlayer.playerMovement.angle}, "
+                                "\nplayer=${player.id}, " +
+                                "\ncurrent tick=${clientTickNumber}, " +
+                                "\nstateMsg.tick=${stateMsg.tick}, " +
+                                "\non bufferSlot=$bufferSlot, " +
+                                "\nlocalState.tick=${localState.tick}, " +
+                                "\npositionLocal=${player.playerMovement.position}, " +
+                                "\nangleLocal=${player.playerMovement.angle}, " +
+                                "\npositionRemote=${remotePlayer.playerMovement.position} " +
+                                "\nangleRemote=${remotePlayer.playerMovement.angle}, "
                                 ).log()
 
 //                        stopGame(player.id)
@@ -442,7 +481,9 @@ class SceneManager(
                         || player.playerMovement.angle != remotePlayer.playerMovement.angle
                         || player.playerMovement.strength != remotePlayer.playerMovement.strength
                     ) {
-                        "Error on: player angles, player=${player.id}".log()
+                        ("Error on: player angles, player=${player.id}, " +
+                                "current tick=${clientTickNumber}, " +
+                                "stateMsg.tick=${stateMsg.tick}").log()
                         errors.add(Error.PlayerAngleError(player.id))
                     }
                 }
@@ -455,11 +496,22 @@ class SceneManager(
                 val localBullet = localBullets.firstOrNull { it.bulletId == remoteBullet.bulletId }
 
                 if (localBullet == null) {
-                    "Error on: bullet not found, bullet=${remoteBullet.bulletId}".log()
+                    ("Error on: bullet not found, " +
+                            "current tick=${clientTickNumber}, " +
+                            "stateMsg.tick=${stateMsg.tick}, " +
+                            "bullet=${remoteBullet.bulletId}, " +
+                            "remoteBullet.position=${remoteBullet.position}").log()
                     errors.add(Error.BulletNotFoundError(remoteBullet.bulletId))
                 } else {
-                    if (localBullet.position.distance(remoteBullet.position) > ERROR_POSITION_FACTOR) {
-                        "Error on: bullet distance, bullet=${remoteBullet.bulletId}".log()
+                    val distance = localBullet.position.distance(remoteBullet.position)
+                    if (distance > ERROR_POSITION_FACTOR) {
+                        ("Error on: bullet distance, " +
+                                "current tick=${clientTickNumber}, " +
+                                "stateMsg.tick=${stateMsg.tick}, " +
+                                "distance=$distance, " +
+                                "bullet=${remoteBullet.bulletId}, " +
+                                "localBullet.position=${localBullet.position}, " +
+                                "remoteBullet.position=${remoteBullet.position}").log()
                         errors.add(Error.BulletPositionError(localBullet.bulletId))
                     }
                 }

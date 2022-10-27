@@ -83,7 +83,7 @@ class GameMainThread(
     }
 
     companion object {
-        const val MAX_FPS = 20
+        const val MAX_FPS = 30
         var CURRENT_DELTA_TIME = 0.0 // Use it for logs
         private var canvas: Canvas? = null
     }
