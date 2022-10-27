@@ -3,6 +3,7 @@ package com.rittmann.myapplication.main.scene
 import android.graphics.Canvas
 import android.view.MotionEvent
 import com.rittmann.myapplication.main.components.Joystick
+import com.rittmann.myapplication.main.entity.MatchError
 import com.rittmann.myapplication.main.entity.Player
 import com.rittmann.myapplication.main.entity.server.BulletInputsState
 import com.rittmann.myapplication.main.entity.server.BulletUpdate
@@ -23,7 +24,6 @@ import com.rittmann.myapplication.main.server.ConnectionControlListeners
 import com.rittmann.myapplication.main.utils.INVALID_ID
 import com.rittmann.myapplication.main.utils.Logger
 import java.util.*
-import kotlin.collections.ArrayList
 
 // KEEP IT EQUALS TO THE SERVER
 private const val BUFFER_SIZE = 1024
@@ -262,6 +262,7 @@ class SceneManager(
             // If some state was changed, do the rewind
             if (rewindTickNumber != INVALID_ID) {
 
+                // Start by the next tick (replayed + 1)
                 rewindTickNumber += 1
 
                 while (rewindTickNumber <= clientTickNumber) {
@@ -349,11 +350,10 @@ class SceneManager(
                     processState = ProcessState.REPLAY
                     tickNumberBeenProcessed = stateMsg.tick
 
-                    // FIXME: I need to join the world states locally and remote, because the remote can be changing only one player
-                    //  - First: I'm going to change only what is wrong
-                    //  - Second: Test using 3 players, because I guess that I need to join the state to guarantee that the replay will
-                    //            consider all states
-
+                    // Some time the server will send only changes of one player or another
+                    // So I`ll need to join the later change with the kept changes
+                    // It means that I`ll going to combine the already kept world state with the new
+                    // world state (adding to the new, the data that are lacking)
                     val combinedState = combineState(stateMsg, bufferSlot) ?: continue
 
                     ("replay clientTickNumber=$clientTickNumber, " +
@@ -413,19 +413,12 @@ class SceneManager(
 
         return WorldState(
             tick = stateMsg.tick,
-            bulletUpdate = stateMsg.bulletUpdate,
+            bulletUpdate = stateMsg.bulletUpdate, // TODO: I guess I'll need to do that for it too
             playerUpdate = PlayerUpdate(players = newPlayers),
         )
     }
 
-    sealed class Error(val id: String) {
-        data class PlayerPositionError(val playerId: String) : Error(playerId)
-        data class PlayerAngleError(val playerId: String) : Error(playerId)
-        data class BulletPositionError(val bulletId: String) : Error(bulletId)
-        data class BulletNotFoundError(val bulletId: String) : Error(bulletId)
-    }
-
-    private fun calculateError(stateMsg: WorldState, bufferSlot: Int): List<Error> {
+    private fun calculateError(stateMsg: WorldState, bufferSlot: Int): List<MatchError> {
         // Get the result of the world of the current buffer
         val localState = this.clientStatePostBuffer[bufferSlot]
         "\nlocalState POST used to compare the error=$localState".log()
@@ -433,7 +426,7 @@ class SceneManager(
         // If they have a different tick, ignores it
         if (stateMsg.tick != localState?.tick) return arrayListOf()
 
-        val errors = arrayListOf<Error>()
+        val errors = arrayListOf<MatchError>()
 
         // Retrieve the local players
         val localPlayers = localState.playerUpdate.players
@@ -470,7 +463,7 @@ class SceneManager(
                                 ).log()
 
 //                        stopGame(player.id)
-                        errors.add(Error.PlayerPositionError(player.id))
+                        errors.add(MatchError.PlayerPositionError(player.id))
                     }
 
                     // Calculate if the angles are different
@@ -484,7 +477,7 @@ class SceneManager(
                         ("Error on: player angles, player=${player.id}, " +
                                 "current tick=${clientTickNumber}, " +
                                 "stateMsg.tick=${stateMsg.tick}").log()
-                        errors.add(Error.PlayerAngleError(player.id))
+                        errors.add(MatchError.PlayerAngleError(player.id))
                     }
                 }
             }
@@ -501,7 +494,7 @@ class SceneManager(
                             "stateMsg.tick=${stateMsg.tick}, " +
                             "bullet=${remoteBullet.bulletId}, " +
                             "remoteBullet.position=${remoteBullet.position}").log()
-                    errors.add(Error.BulletNotFoundError(remoteBullet.bulletId))
+                    errors.add(MatchError.BulletNotFoundError(remoteBullet.bulletId))
                 } else {
                     val distance = localBullet.position.distance(remoteBullet.position)
                     if (distance > ERROR_POSITION_FACTOR) {
@@ -512,7 +505,7 @@ class SceneManager(
                                 "bullet=${remoteBullet.bulletId}, " +
                                 "localBullet.position=${localBullet.position}, " +
                                 "remoteBullet.position=${remoteBullet.position}").log()
-                        errors.add(Error.BulletPositionError(localBullet.bulletId))
+                        errors.add(MatchError.BulletPositionError(localBullet.bulletId))
                     }
                 }
             }
